@@ -2,6 +2,8 @@
 .atl/
 .ecc/
 .opencode/
+.pi/
+agents/
 
 # ── Dependencias ──────────────────────────────────────────
 node_modules/

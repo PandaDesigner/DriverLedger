@@ -12,5 +12,12 @@
   },
   "scripts": {
     "ui": "bun --filter ui"
+  },
+  "devDependencies": {
+    "@juicesharp/rpiv-todo": "^2.13.2",
+    "@juicesharp/rpiv-warp": "^2.13.1",
+    "@mjasnikovs/pi-task": "^0.42.56",
+    "@rmrdeveloper/sideroom-pi": "^8.11.0",
+    "pi-openspec-status": "^0.8.1"
   }
 }
