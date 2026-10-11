@@ -1,36 +1,131 @@
-# GitFlow — DriverLedger
+# GitFlow + OpenSpec — DriverLedger
 
-Flujo de ramas basado en [GitFlow (nvie)](https://nvie.com/posts/a-successful-git-branching-model/), adaptado a la orquestación multiagente del proyecto.
+El versionado sigue [GitFlow](https://nvie.com/posts/a-successful-git-branching-model/) y está **gobernado por OpenSpec**: ninguna rama de trabajo existe sin un change que la justifique, y ningún change se archiva sin que su rama haya mergeado.
 
-## Ramas
+## La regla de oro
 
-| Ram | Propósito | Origen | Destino |
-|-----|-----------|--------|---------|
-| `main` | Producción. Solo código liberado y taggeado. | — | — |
-| `develop` | Integración. features listos para release. | `main` | `main` |
-| `feature/*` | Trabajo nuevo (una por funcionalidad). | `develop` | `develop` |
-| `release/*` | Preparación de release (QA, fixes de último minuto). | `develop` | `main` + `develop` |
-| `hotfix/*` | Fix urgente en producción. | `main` | `main` + `develop` |
-
-## Reglas
-
-1. **Nunca commitear directo a `main`.** Todo pasa por `develop` o `release/*`.
-2. **Features nacen de `develop`**, no de `main`. Antes de arrancar: `git checkout develop && git pull`.
-3. **Una feature = una funcionalidad.** Si crece, partir en sub-features.
-4. **Merge a `develop` con `--no-ff`** para preservar la historia de la feature.
-5. **Tags en `main`** por release: `v{major}.{minor}.{patch}` (SemVer).
-6. **Rebase antes de mergear** una feature a `develop` si develop avanzó.
-7. **Conventional commits** en todos los commits (ver abajo).
-
-## Convención de ramas
+> **1 change de OpenSpec = 1 rama feature.**
+> El nombre del change ES el nombre de la rama (sin el prefijo).
 
 ```
-feature/short-descriptive-name
-release/v1.0.0
-hotfix/v1.0.1
+openspec/changes/add-sync-queue/   ↔   feature/add-sync-queue
 ```
 
-Sin mayúsculas, sin espacios, guiones bajos ni caracteres especiales.
+## Ramas permanentes
+
+| Rama | Propósito | Quién escribe |
+|------|-----------|---------------|
+| `main` | Producción. Solo recibe merges desde `release/*` y `hotfix/*`, con tag SemVer. | Human gate |
+| `develop` | Integración. Acumula changes archivados listos para release. | Merge de features |
+
+## Ramas temporales (viven y mueren con su change)
+
+| Rama | Nace de | Muere en | Change OpenSpec |
+|------|---------|----------|-----------------|
+| `feature/<change>` | `develop` | merge a `develop` + `openspec archive` | `openspec/changes/<change>/` |
+| `release/v<x.y.z>` | `develop` | merge a `main` y `develop` | agrupa changes archivados |
+| `hotfix/<change>` | `main` | merge a `main` y `develop` + tag patch | change con spec mínimo justificando urgencia |
+
+## Ciclo de vida completo
+
+### 1. Proponer (en `develop`)
+
+```bash
+git checkout develop && git pull
+```
+
+El agente (o el humano) propone el change con OpenSpec — se generan `proposal.md`, `design.md`, `tasks.md` y los deltas de specs en `openspec/changes/<change>/`.
+
+```bash
+openspec validate <change> --strict   # la propuesta debe ser válida ANTES de codificar
+```
+
+**Puerta humana 1**: se revisa y aprueba la propuesta antes de crear la rama.
+
+### 2. Crear la rama
+
+```bash
+git checkout -b feature/<change>
+```
+
+Primer commit de la rama: los artefactos del change.
+
+```bash
+git add openspec/changes/<change>
+git commit -m "docs: propose <change>"
+```
+
+### 3. Implementar
+
+Se trabajan las tasks del `tasks.md` dentro de la rama. Commits con conventional commits, referenciando el change cuando aporta contexto:
+
+```bash
+git commit -m "feat: add offline sync queue with retry (<change>)"
+```
+
+A medida que se completan tasks, se marcan en `tasks.md` y se commitean junto con el código.
+
+**Restricción de ownership**: si el change toca `data/` o `services/` lo ejecuta OpenCode; si toca `ui/` o `tests/`, lo ejecuta Pi. Un change no mezcla ambos dominios — se parte en dos.
+
+### 4. Verificar (antes del merge)
+
+```bash
+openspec validate <change> --strict   # specs coherentes
+openspec status <change>              # tasks completadas
+# + tests del proyecto
+```
+
+**Puerta humana 2**: aprobación del resultado antes de mergear.
+
+### 5. Mergear y archivar
+
+```bash
+git checkout develop
+git merge --no-ff feature/<change>
+openspec archive <change>             # mueve a changes/archive/ y actualiza specs/
+git add openspec/
+git commit -m "docs: archive <change>"
+git push origin develop
+git branch -d feature/<change>
+```
+
+El archivo del change **es parte del mismo flujo**: `develop` siempre lleva `openspec/specs/` al día con lo que ya está implementado.
+
+### 6. Release
+
+```bash
+git checkout -b release/v1.0.0        # desde develop
+# bumps de versión, changelog, fixes de último minuto (solo fix/docs)
+git checkout main && git merge --no-ff release/v1.0.0
+git tag -a v1.0.0 -m "Release v1.0.0"
+git checkout develop && git merge --no-ff release/v1.0.0
+git push origin main --tags && git push origin develop
+git branch -d release/v1.0.0
+```
+
+### 7. Hotfix
+
+```bash
+git checkout -b hotfix/<change>       # desde main
+# change OpenSpec mínimo: proposal + spec del fix
+# ... implementar ...
+git checkout main && git merge --no-ff hotfix/<change>
+git tag -a v1.0.1 -m "Hotfix v1.0.1"
+git checkout develop && git merge --no-ff hotfix/<change>
+openspec archive <change>
+git push origin main --tags && git push origin develop
+```
+
+## Estados de un change vs estados de la rama
+
+| Change OpenSpec | Rama git |
+|-----------------|----------|
+| propuesto (changes/) | `feature/<change>` creada, commits de artefactos |
+| tasks en progreso | commits de implementación |
+| tasks completas, validado | lista para merge |
+| archivado (changes/archive/) | mergeada y borrada |
+
+Si una rama `feature/*` no tiene change correspondiente en `openspec/changes/` o `openspec/changes/archive/`, es una rama huérfana: se corrige o se borra.
 
 ## Conventional commits
 
@@ -38,88 +133,19 @@ Sin mayúsculas, sin espacios, guiones bajos ni caracteres especiales.
 |------|-----|
 | `feat:` | Funcionalidad nueva |
 | `fix:` | Bug fix |
-| `docs:` | Documentación |
+| `docs:` | Documentación y artefactos OpenSpec |
 | `refactor:` | Refactor sin cambio de comportamiento |
 | `test:` | Tests |
 | `chore:` | Infra, config, dependencias |
 
 Formato: `<tipo>: <descripción imperativa, minúsculas>`
 
-Ejemplo: `feat: add sync queue for offline trips`
-
-## Ownership por carpetas (sin conflicto con GitFlow)
-
-| Agente | Carpetas |
-|---------|----------|
-| OpenCode | `data/` `services/` |
-| Pi | `ui/` `tests/` |
-
-Las features se asignan según las carpetas que tocan. Si una feature toca carpetas de ambos, se parte en dos features separadas.
-
-## Flujo típico de una feature
+## Comandos de consulta rápida
 
 ```bash
-# 1. Arrancar desde develop actualizado
-git checkout develop && git pull origin develop
-
-# 2. Crear la feature
-git checkout -b feature/sync-queue-offline
-
-# 3. Trabajar y commitear con conventional commits
-git add services/sync/
-git commit -m "feat: add offline sync queue with retry"
-
-# 4. Antes de mergear, rebase sobre develop
-git fetch origin
-git rebase origin/develop
-
-# 5. Merge a develop (sin fast-forward)
-git checkout develop
-git merge --no-f feature/sync-queue-offline
-
-# 6. Pushear
-git push origin develop
-
-# 7. Borrar la feature local y remota
-git branch -d feature/sync-queue-offline
-git push origin --delete feature/sync-queue-offline
-```
-
-## Release
-
-```bash
-# 1. Crear rama de release
-git checkout develop
-git checkout -b release/v1.0.0
-
-# 2. Fixes de último momento (solo fix: y docs:)
-
-# 3. Mergear a main y taggear
-git checkout main
-git merge --no-ff release/v1.0.0
-git tag -a v1.0.0 -m "Release v1.0.0"
-
-# 4. Mergear de vuelta a develop
-git checkout develop
-git merge --no-ff release/v1.0.0
-
-# 5. Pushear todo
-git push origin main --tags
-git push origin develop
-
-# 6. Borrar rama de release
-git branch -d release/v1.0.0
-```
-
-## Hotfix
-
-```bash
-git checkout main
-git checkout -b hotfix/v1.0.1
-# ... fix urgente ...
-git commit -m "fix: resolve crash on empty trip list"
-git checkout main && git merge --no-ff hotfix/v1.0.1
-git tag -a v1.0.1 -m "Hotfix v1.0.1"
-git checkout develop && git merge --no-ff hotfix/v1.0.1
-git push origin main --tags && git push origin develop
+openspec list                # changes activos (= features que deberían existir)
+openspec list --specs        # specs archivadas (= lo implementado)
+openspec view                # dashboard interactivo
+openspec status <change>     # progreso de tasks de un change
+git branch --list 'feature/*' 'hotfix/*'   # ramas vivas (deben mapear 1:1 con changes activos)
 ```
