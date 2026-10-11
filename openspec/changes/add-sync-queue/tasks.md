@@ -4,19 +4,19 @@
 
 ## Phase A — Proposal artifacts (first commit on `feature/add-sync-queue`)
 
-- [ ] **A.1** Write `openspec/changes/add-sync-queue/{proposal.md, design.md, tasks.md, specs/sync-queue/spec.md}`. Commit type: `docs: propose add-sync-queue`.
+- [x] **A.1** Write `openspec/changes/add-sync-queue/{proposal.md, design.md, tasks.md, specs/sync-queue/spec.md}`. Commit type: `docs: propose add-sync-queue`.
 
 ## Phase B — Port interface (one commit)
 
-- [ ] **B.1** Write `services/sync-queue.transport.ts` — `SyncTransport` port interface (`read`, `upsert`, `delete`) + `SyncConflict` enum (`'none' | 'remote-fresher'`) + `SyncTransportRead<T>` return type. No Supabase import. Tests use `FakeSyncTransport` so the interface stays backend-agnostic (Fase 5 ships the concrete impl). Commit type: `feat: add sync queue transport port (add-sync-queue)`.
+- [x] **B.1** Write `services/sync-queue.transport.ts` — `SyncTransport` port interface (`read`, `upsert`, `delete`) + `SyncConflict` enum (`'none' | 'remote-fresher'`) + `SyncTransportRead<T>` return type. No Supabase import. Tests use `FakeSyncTransport` so the interface stays backend-agnostic (Fase 5 ships the concrete impl). Commit type: `feat: add sync queue transport port (add-sync-queue)`.
 
 ## Phase C — NetworkService (one commit)
 
-- [ ] **C.1** Write `services/network.service.ts` — `NetworkService` class exposing `red$: BehaviorSubject<boolean>` (current connectivity) + `becameOnline$: Observable<void>` (rising-edge trigger). Constructor injects a connectivity source so production can wire `expo-network` and tests can wire `FakeNetwork`. Disconnects (online → offline) emit on `red$` only, NOT on `becameOnline$`. Commit type: `feat: add network service with red$ and becameOnline$ (add-sync-queue)`.
+- [x] **C.1** Write `services/network.service.ts` — `NetworkService` class exposing `red$: BehaviorSubject<boolean>` (current connectivity) + `becameOnline$: Observable<void>` (rising-edge trigger). Constructor injects a connectivity source so production can wire `expo-network` and tests can wire `FakeNetwork`. Disconnects (online → offline) emit on `red$` only, NOT on `becameOnline$`. Commit type: `feat: add network service with red$ and becameOnline$ (add-sync-queue)`.
 
 ## Phase D — Sync service (one commit)
 
-- [ ] **D.1** Write `services/sync-queue.service.ts` — `SyncQueueService` class. Public surface:
+- [x] **D.1** Write `services/sync-queue.service.ts` — `SyncQueueService` class. Public surface:
   - `drain(): Promise<void>` — idempotent manual flush; no-op if a drain is already in flight.
   - `enqueue(evt: DbChange): Promise<void>` — idempotent on `(driver_id, tabla, registro_id, operacion)`; refreshes `ultimo_intento` on duplicate.
   - `syncState$: Observable<SyncDrainState>` — emits `'idle' | 'draining' | 'backoff' | 'pausado-cap'` after every drain.
@@ -36,7 +36,7 @@
 
 ## Phase E — Network service tests (RED first, then GREEN)
 
-- [ ] **E.1** Write `services/__tests__/network.service.test.ts` — covers:
+- [x] **E.1** Write `services/__tests__/network.service.test.ts` — covers:
   - `red$` reflects the source's `isOnline()` result on boot and after each `subscribe` callback.
   - `becameOnline$` fires when transitioning `offline → online` (rising edge).
   - `becameOnline$` does NOT fire when transitioning `online → offline`.
@@ -46,7 +46,7 @@
 
 ## Phase F — Sync queue tests (RED first, then GREEN)
 
-- [ ] **F.1** Write `services/__tests__/sync-queue.service.test.ts` — covers:
+- [x] **F.1** Write `services/__tests__/sync-queue.service.test.ts` — covers:
   - **Drain success on `apply`**: enqueue 1 row, `drain()` resolves with `syncState$ = 'idle'`, `sync_queue` row has `estado = 'completado'`, transport received exactly one `upsert` call.
   - **Drop on `remote-fresher`**: `FakeSyncTransport.read()` returns `updated_at > local.updated_at`; row transitions `pendiente → completado` with no `upsert` call.
   - **Push on `remote-equal`**: `FakeSyncTransport.read()` returns `updated_at === local.updated_at`; row transitions to `completado` with one `upsert` call.
@@ -66,10 +66,10 @@
 
 ## Phase G — Verification (must pass before merge)
 
-- [ ] **G.1** Run `openspec validate add-sync-queue --strict` — exits 0. Commit type: `chore: verify openspec strict (add-sync-queue)`.
-- [ ] **G.2** Run `bun test services/__tests__/sync-queue.service.test.ts services/__tests__/network.service.test.ts` from repo root — exits 0; all suites pass. Commit type: `chore: verify sync-queue bun test (add-sync-queue)`.
-- [ ] **G.3** Run `bun test --coverage` — coverage on `services/sync-queue.service.ts` ≥ 80% lines/functions/statements/branches. Commit type: `chore: verify sync-queue coverage threshold (add-sync-queue)`.
-- [ ] **G.4** `git diff develop --stat` audit — no files under `ui/`, top-level `tests/`, `data/`, `services/db.service.ts`, or `services/carrera.repo.ts` (cross-domain rule + Phase 1 freeze). Commit type: `chore: verify cross-domain boundary (add-sync-queue)`.
+- [x] **G.1** Run `openspec validate add-sync-queue --strict` — exits 0. Commit type: `chore: verify openspec strict (add-sync-queue)`.
+- [x] **G.2** Run `bun test services/__tests__/sync-queue.service.test.ts services/__tests__/network.service.test.ts` from repo root — exits 0; all suites pass. Commit type: `chore: verify sync-queue bun test (add-sync-queue)`.
+- [x] **G.3** Run `bun test --coverage` — coverage on `services/sync-queue.service.ts` ≥ 80% lines/functions/statements/branches. Commit type: `chore: verify sync-queue coverage threshold (add-sync-queue)`.
+- [x] **G.4** `git diff develop --stat` audit — no files under `ui/`, top-level `tests/`, `data/`, `services/db.service.ts`, or `services/carrera.repo.ts` (cross-domain rule + Phase 1 freeze). Commit type: `chore: verify cross-domain boundary (add-sync-queue)`.
 
 ## Phase H — Merge + archive (human gate 2)
 
