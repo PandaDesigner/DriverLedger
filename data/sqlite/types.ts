@@ -167,3 +167,14 @@ export interface AppliedMigrationRow {
   name: string;
   applied_at: string;
 }
+
+/**
+ * Minimal SQL runner exposed to `Migration.postApply` hooks. Matches the
+ * shape of `expo-sqlite`'s `SQLiteDatabase` for the operations migrations
+ * actually need (`getAllSync`, `execSync`). Bun's `bun:sqlite` is shape-
+ * compatible in tests.
+ */
+export interface SqliteDatabaseRunner {
+  getAllSync<T>(sql: string, params?: unknown[]): T[];
+  execSync(sql: string): void;
+}
