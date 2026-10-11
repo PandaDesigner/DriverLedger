@@ -165,7 +165,19 @@ export function dbChange$(): Observable<DbChange> {
 export async function getDb(factory?: DatabaseFactory): Promise<LocalDatabase> {
   if (state) return state.db;
   if (!statePromise) {
-    statePromise = init(factory ?? defaultFactory);
+    statePromise = init(factory ?? defaultFactory, 'driverledger.db');
+  }
+  await statePromise;
+  return state!.db;
+}
+
+export async function getDbNamed(
+  name: string,
+  factory?: DatabaseFactory,
+): Promise<LocalDatabase> {
+  if (state) return state.db;
+  if (!statePromise) {
+    statePromise = init(factory ?? defaultFactory, name);
   }
   await statePromise;
   return state!.db;
@@ -198,8 +210,11 @@ export async function closeDb(): Promise<void> {
 // Initialisation — applies migrations + bridges + base snapshots.
 // ---------------------------------------------------------------------------
 
-async function init(factory: DatabaseFactory): Promise<DbState> {
-  const db = factory('driverledger.db');
+async function init(
+  factory: DatabaseFactory,
+  name: string = 'driverledger.db',
+): Promise<DbState> {
+  const db = factory(name);
 
   db.exec('PRAGMA journal_mode = WAL;');
   db.exec('PRAGMA foreign_keys = ON;');

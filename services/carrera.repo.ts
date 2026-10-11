@@ -116,7 +116,7 @@ export async function upsertByTripId(
     payload.duracion_min ?? null,
     payload.estado ?? 'activa',
     payload.fuente ?? 'manual',
-    payload.fecha ?? null,
+    payload.fecha ?? new Date().toISOString().slice(0, 10),
     ts, // created_at (insert-only via INSERT-ON-CONFLICT preserves existing value)
     ts, // updated_at
     fromJson(payload.metadata ?? {}),
@@ -226,7 +226,7 @@ function emitAfterWrite(
     'SELECT * FROM carreras ORDER BY updated_at DESC',
   );
   bridge.carreras$.next(refreshed);
-  bridge.dbChange.next({
+  bridge.dbChange$.next({
     kind,
     table: 'carreras',
     rowId: row.id,
