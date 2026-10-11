@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "scheme": "driverledger",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "backgroundColor": "#0F172A",
       "resizeMode": "contain"
