@@ -561,6 +561,23 @@ describe('SyncQueueService — conflict resolver (LWW at enqueue time)', () => {
     );
     expect(row?.estado).toBe('completado');
     expect(h.transport.upsertCalls.length).toBe(0);
+
+    // Spec scenario `sync-conflict-resolver / drop cuando remoto es mas reciente`
+    // requires a log_eventos row with tipo='sync.conflict' on every drop.
+    const logRow = h.db.queryOne<{
+      tipo: string;
+      driver_id: string;
+      metadata: string;
+    }>(
+      `SELECT tipo, driver_id, metadata FROM log_eventos WHERE tipo = 'sync.conflict'`,
+    );
+    expect(logRow).not.toBeNull();
+    expect(logRow?.tipo).toBe('sync.conflict');
+    const logMeta = JSON.parse((logRow?.metadata ?? '{}') as string) as {
+      sync_queue_id?: string;
+    };
+    expect(logMeta.sync_queue_id).toBe(row?.id);
+
     h.service.stop();
   });
 

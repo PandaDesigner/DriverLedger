@@ -418,7 +418,7 @@ export class SyncQueueService {
         this.isRemoteFresher(remote, localUpdatedAt);
 
       if (remoteDrop) {
-        return await this.markConflictDropped(db, row.id);
+        return await this.markConflictDropped(db, row.id, row.driver_id);
       }
 
       // Push — `delete` and other ops route through `transport.upsert`.
@@ -438,7 +438,7 @@ export class SyncQueueService {
           localUpdatedAt ?? now,
         );
         if (result.conflict === 'remote-fresher') {
-          return await this.markConflictDropped(db, row.id);
+          return await this.markConflictDropped(db, row.id, row.driver_id);
         }
       }
 
@@ -456,13 +456,15 @@ export class SyncQueueService {
 
   /**
    * Mark the row as a conflict drop — `completado` with
-   * `metadata.error = 'remote-fresher'`. RFC-004 §Flujo 6 + spec
-   * scenario `sync-conflict-resolver / drop cuando remoto es mas
-   * reciente`.
+   * `metadata.error = 'remote-fresher'`. Also inserts an audit row in
+   * `log_eventos (tipo = 'sync.conflict')` per spec scenario line 78.
+   * RFC-004 §Flujo 6 + spec scenario `sync-conflict-resolver / drop
+   * cuando remoto es mas reciente`.
    */
   private async markConflictDropped(
     db: LocalDatabase,
     id: string,
+    driverId: string,
   ): Promise<'completado'> {
     const ts = new Date().toISOString();
     db.run(
@@ -472,6 +474,18 @@ export class SyncQueueService {
            metadata = json_set(COALESCE(metadata, '{}'), '$.error', 'remote-fresher')
        WHERE id = ?`,
       [ts, id],
+    );
+    // Audit row — `local-rls-facade` permits only `db.service.ts` writes;
+    // here we route the INSERT through the same `LocalDatabase` interface
+    // so the facade contract holds.
+    db.run(
+      `INSERT INTO log_eventos (id, driver_id, tipo, metadata)
+       VALUES (?, ?, 'sync.conflict', json_set('{}', '$.sync_queue_id', ?))`,
+      [
+        crypto.randomUUID(),
+        driverId,
+        id,
+      ],
     );
     return 'completado';
   }
