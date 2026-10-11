@@ -1,0 +1,23 @@
+{
+  "name": "driverledger",
+  "version": "0.0.0",
+  "private": true,
+  "description": "DriverLedger — Bun workspace root (Fase 0b: ui/ skeleton).",
+  "workspaces": [
+    "ui"
+  ],
+  "packageManager": "bun@1.3.12",
+  "engines": {
+    "bun": ">=1.3.12"
+  },
+  "scripts": {
+    "ui": "bun --filter ui"
+  },
+  "devDependencies": {
+    "@juicesharp/rpiv-todo": "^2.13.2",
+    "@juicesharp/rpiv-warp": "^2.13.1",
+    "@mjasnikovs/pi-task": "^0.42.56",
+    "@rmrdeveloper/sideroom-pi": "^8.11.0",
+    "pi-openspec-status": "^0.8.1"
+  }
+}

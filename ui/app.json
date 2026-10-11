@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "DriverLedger",
+    "slug": "driverledger",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "scheme": "driverledger",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": false,
+    "splash": {
+      "backgroundColor": "#0F172A",
+      "resizeMode": "contain"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.driverledger.app"
+    },
+    "android": {
+      "package": "com.driverledger.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0F172A"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-location"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
