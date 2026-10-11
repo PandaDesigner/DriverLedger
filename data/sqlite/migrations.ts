@@ -156,7 +156,7 @@ CREATE INDEX IF NOT EXISTS idx_sync_queue_ultimo_intento
 // SQLite builds (including `expo-sqlite` versions before SDK 51) do not
 // recognise that syntax. Cross-version safety over syntax sugar.
 
-const METADATA_SAFETY_NET_SQL = `-- 0003: see migrations.ts#ensureMetadataColumns`;
+const METADATA_SAFETY_NET_SQL = `SELECT 1; -- 0003: see migrations.ts#ensureMetadataColumns`;
 
 /** Detect tables missing `metadata` and ALTER TABLE ADD COLUMN them. */
 function ensureMetadataColumns(db: SqliteDatabaseRunner): void {
