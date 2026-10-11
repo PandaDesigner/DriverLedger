@@ -4,6 +4,17 @@
 
 Phase 0 of PRD §8: bootstrap the Supabase remote schema (6 tables from RFC-002) with RLS, seeds, auth, realtime, and storage BEFORE any client app lands. Produces the canonical remote source-of-truth that the offline-first SQLite layer will sync against. Doing the remote first means Phase 1 (`local-data-model-sqlite`) and downstream work can reference a stable contract.
 
+## Why
+
+DriverLedger arranca docs-only y la **Fase 0** garantiza la **fuente de verdad remota** antes de que aterrice cualquier cliente. Sin este change, Fase 1 (`local-data-model-sqlite`) y todo el trabajo downstream no tendrían contrato contra el que sincronizar — derivaría en schema drift entre SQLite local y Supabase, brechas de RLS entre drivers y bugs sutiles al merge.
+
+Alineado con:
+
+- **PRD §3** y **§8** (modelo de datos y fase 0 del plan).
+- **RFC-002 §Tablas** (6 tablas, RLS por `driver_id`, JSONB metadata, upserts por `trip_id`).
+- **RFC-004 §Reglas** (last-write-wins por `updated_at`, GPS no se sincroniza, sync queue con backoff).
+- **Gherkin §1–§3** (escenarios de comportamiento contractuales).
+
 ## Scope
 
 ### In Scope

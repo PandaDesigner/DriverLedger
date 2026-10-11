@@ -38,6 +38,18 @@ WHEN a `expo-task-manager` task ends and emits a ride, THEN the system SHALL per
 
 The `carreras.estado` column SHALL accept only one of `activa`, `completada`, `cancelada`.
 
+#### Scenario: Carrera activa
+
+WHEN a driver starts an Uber ride and confirms via one-tap, THEN the system SHALL persist `estado = activa`.
+
+#### Scenario: Carrera completada
+
+WHEN the driver manually confirms ride end, THEN the system SHALL transition `estado` from `activa` to `completada`.
+
+#### Scenario: Carrera cancelada
+
+WHEN the driver cancels before pickup, THEN the system SHALL transition `estado` from `activa` to `cancelada`.
+
 ### Requirement: rls-by-driver-id
 
 For every table with a `driver_id` column (`carreras`, `gastos_fijos`, `gastos_diarios`, `log_eventos`, `sync_queue`), the system SHALL enforce Row-Level Security with policies that restrict `SELECT`, `INSERT`, `UPDATE`, and `DELETE` to rows where `driver_id = auth.uid()`.
@@ -76,6 +88,14 @@ The schema SHALL include the following indexes:
 - `sync_queue(driver_id, estado)`
 - `sync_queue(ultimo_intento)`
 
+#### Scenario: Carrera history pagination
+
+WHEN the Historial screen queries `carreras` ordered by `fecha DESC`, THEN the query SHALL use `idx_carreras_fecha` and SHALL return rows for the requesting driver in < 50ms over 5000 rows.
+
+#### Scenario: Sync queue driver scan
+
+WHEN the SyncService scans pending rows for one driver, THEN the query SHALL use `idx_sync_queue_driver_estado` and SHALL return only that driver's rows ordered by `ultimo_intento`.
+
 ### Requirement: updated-at-trigger
 
 The `carreras` table SHALL auto-update its `updated_at` column via a `BEFORE UPDATE` trigger. Client-set values SHALL be ignored (the trigger overrides).
@@ -87,6 +107,18 @@ WHEN two writes target the same `(driver_id, trip_id)` from different sessions, 
 ### Requirement: jsonb-metadata-extensibility
 
 Every extensible table SHALL include a `metadata JSONB DEFAULT '{}'::jsonb` column for future schema additions without migration. The system SHALL NOT enforce CHECK constraints on the shape of `metadata` (schema-less by design).
+
+#### Scenario: Platform-specific payload in carrera metadata
+
+WHEN an Uber ride carries a `vehicle_view` field, THEN the system SHALL persist it as `metadata.vehicle_view` without requiring a schema migration.
+
+#### Scenario: Future field without migration
+
+WHEN a future platform integration adds a new optional field, THEN the system SHALL store it under `metadata` and SHALL NOT require a schema change to the table.
+
+#### Scenario: Default value when omitted
+
+WHEN an INSERT omits the `metadata` column, THEN the system SHALL default to `'{}'::jsonb`.
 
 ## REMOVED Requirements
 

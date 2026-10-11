@@ -10,6 +10,14 @@ Define the storage buckets required for the application and their per-driver acc
 
 The system SHALL provision exactly two storage buckets: `avatares` (public read) and `recibos` (private, per-driver access).
 
+#### Scenario: Both buckets provisioned
+
+WHEN the storage migration is applied, THEN the system SHALL create `avatares` (public, with the project-defined size limit) and `recibos` (private, with the project-defined size limit).
+
+#### Scenario: No additional buckets
+
+WHEN the storage migration is applied, THEN the system SHALL NOT create any other storage buckets beyond `avatares` and `recibos`.
+
 ### Requirement: avatares-public-read
 
 The `avatares` bucket SHALL allow public SELECT (avatar images are intentionally public). Writes to `avatares` SHALL be restricted to authenticated users.
@@ -37,6 +45,14 @@ WHEN driver-A requests an object at `recibos/driver-A-uuid/<file>`, THEN the sys
 ### Requirement: storage-no-public-write
 
 The system SHALL NOT allow anonymous (non-authenticated) INSERTs into either bucket.
+
+#### Scenario: Anonymous INSERT rejected
+
+WHEN an anonymous client attempts to INSERT into either `avatares` or `recibos`, THEN the system SHALL reject the write with an auth error.
+
+#### Scenario: Authenticated INSERT permitted by bucket RLS
+
+WHEN an authenticated driver INSERTs into `avatares` (their own avatar) or into `recibos` under `<their-uuid>/<file>`, THEN the system SHALL accept the write per the bucket RLS policies.
 
 ## REMOVED Requirements
 
