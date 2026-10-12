@@ -11,7 +11,7 @@
 - [x] 2.1 RED: crear `tests/unit/ui-demo.test.ts` para reset, acciones simuladas, confirmación repetida, borradores y ausencia de efectos externos.
 - [x] 2.2 GREEN: implementar tipos, fixtures y estado determinista en `ui/src/demo/`, sin credenciales ni datos reales.
 - [x] 2.3 RED/GREEN: crear `tests/unit/ui-history.test.ts` y filtros en `ui/src/demo/history.ts` para rango, plataforma, tipo, agrupación y vacío.
-- [ ] 2.4 RED/GREEN: crear `tests/unit/ui-navigation.test.ts` y validación de rutas/parámetros en `ui/src/demo/navigation.ts`.
+- [x] 2.4 RED/GREEN: crear `tests/unit/ui-navigation.test.ts` y validación de rutas/parámetros en `ui/src/demo/navigation.ts`.
 - [x] 2.5 REFACTOR: revisar módulos `ui/src/demo/` sin inventar cálculos financieros ni abstracciones de servicios productivos.
 
 ## 3. Shell y controles
