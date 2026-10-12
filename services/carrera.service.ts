@@ -3,7 +3,7 @@
  * the strategies registry (Phase 4 OpenCode), and the local SQLite repo
  * (Phase 1 OpenCode frozen).
  *
- * Public surface (PR #1 Task 1.4):
+ * Public surface (PR #1 Task 1.4 + PR #2 Task 2.4):
  *   - `listPlataformas(): Promise<PlataformaRow[]>` — reference data for
  *     V04 onboarding + M01 modal.
  *   - `getStrategyByTipo(tipo): PlatformStrategy` — registry lookup with
@@ -13,7 +13,10 @@
  *     `plataformaId` → `PlataformaRow` → strategy → `StrategySuggestion`.
  *     OVERWRITES `suggestion.draft.plataforma_id` so the UI never has to
  *     trust the strategy's outbound field.
- *     NO DB WRITE in PR #1; `commitRegistration` lands in PR #2.
+ *   - `commitRegistration(driverId, suggestion, tripId?)` — writes the
+ *     Carrera row via `carreraRepo.upsertByTripId` and emits the audit
+ *     `log_eventos(tipo='carrera.registered')` row ONLY on (a) below-
+ *     threshold fallback OR (b) repo error (AD-5, mirroring W-LOG-CONFLICT).
  *
  * Two errors are typed:
  *   - `UnknownStrategyError` (re-exported from the registry module)
@@ -23,16 +26,16 @@
  * `services/sync-queue.service.ts` or `expo-sqlite`. The auto-enqueue
  * subscription at `services/sync-queue.service.ts:547-549` catches every
  * Carrera write structurally via `dbChange$`; we never enqueue manually
- * (R-8 mitigation).
+ * (R-8 mitigation). The static check is enforced by
+ * `services/__tests__/carrera.service.test.ts` (PR #2 Task 2.4).
  */
 
-import type { PlataformaRow } from '../data/sqlite/types';
+import type { CarreraRow, PlataformaRow } from '../data/sqlite/types';
 
-import { listPlataformas as carreraRepoListPlataformas } from './carrera.repo';
-import {
-  getStrategyByTipo as registryGetStrategyByTipo,
-} from './strategies/registry';
+import { listPlataformas as carreraRepoListPlataformas, upsertByTripId as carreraRepoUpsertByTripId } from './carrera.repo';
+import { fromJson, getDb } from './db.service';
 import { STRATEGY_REGISTRY } from './strategies/registry';
+import { CONFIDENCE_THRESHOLD } from './strategies/confidence';
 import type {
   PlatformStrategy,
   StrategySuggestInput,
@@ -77,6 +80,18 @@ export class UnknownPlataformaError extends Error {
 export type RegistryLike = Readonly<Record<string, PlatformStrategy>>;
 
 /**
+ * Optional DI: a custom upsert function for tests that want to simulate
+ * a repo error. Production code uses `carreraRepo.upsertByTripId` (the
+ * Phase 1 frozen contract). Mirrored after the `registry` parameter so
+ * the constructor pattern is consistent.
+ */
+export type Upserter = (
+  driverId: string,
+  tripId: string,
+  payload: import('./carrera.repo').CarreraPayload,
+) => Promise<import('../data/sqlite/types').CarreraRow>;
+
+/**
  * `CarreraService` — orchestration class.
  *
  * The single instance state is the (frozen) registry reference; once
@@ -85,17 +100,21 @@ export type RegistryLike = Readonly<Record<string, PlatformStrategy>>;
  *
  * The `registry` override lets PR #2 unit tests inject fake strategies
  * (e.g. `DidiStrategy` after Task 2.2) without touching the static
- * module-level map. The override is intentionally NOT exposed via
- * a `setRegistry()` method — that would violate AD-3's "frozen at
+ * module-level map. The `upsert` override lets the error-path audit
+ * test inject a throwing upsert. The overrides are intentionally NOT
+ * exposed via setter methods — that would violate AD-3's "frozen at
  * module import" guarantee.
  */
 export class CarreraService {
   private readonly registry: RegistryLike;
+  private readonly upsert: Upserter;
 
   constructor(
     registry: RegistryLike = STRATEGY_REGISTRY as RegistryLike,
+    upsert: Upserter = carreraRepoUpsertByTripId,
   ) {
     this.registry = registry;
+    this.upsert = upsert;
   }
 
   /**
@@ -108,25 +127,26 @@ export class CarreraService {
   }
 
   /**
-   * `getStrategyByTipo` — re-export of the registry lookup, with a
-   * `console.warn` log emitted before re-throwing. Mirrors the W-LOG-CONFLICT
-   * precedent (one observable signal per miss).
+   * `getStrategyByTipo` — instance-level registry lookup, with a
+   * `console.warn` log emitted before re-throwing. Mirrors the
+   * W-LOG-CONFLICT precedent (one observable signal per miss).
    *
-   * Caller can `try { service.getStrategyByTipo(...) } catch (err) { ... }`
-   * to handle the `UnknownStrategyError` typed throw.
+   * Uses the instance's `this.registry` (not the module-level
+   * `STRATEGY_REGISTRY`) so DI-injected overrides take effect. This
+   * is the resolution that makes the constructor's `registry`
+   * parameter actually do something (the test suite relies on it
+   * to inject a fake strategy for the happy-path audit assertion).
    */
   getStrategyByTipo(tipo: string): PlatformStrategy {
-    try {
-      return registryGetStrategyByTipo(tipo);
-    } catch (err) {
-      if (err instanceof UnknownStrategyError) {
-        console.warn(
-          `[carrera.service] strategy lookup miss: tipo_estrategia='${tipo}' ` +
-            `(phase 4 ships only uber_api; PR #2 fills in didi_manual + indrive_form)`,
-        );
-      }
-      throw err;
+    const strategy = this.registry[tipo];
+    if (strategy === undefined) {
+      console.warn(
+        `[carrera.service] strategy lookup miss: tipo_estrategia='${tipo}' ` +
+          `(phase 4 ships only uber_api; PR #2 fills in didi_manual + indrive_form)`,
+      );
+      throw new UnknownStrategyError(tipo);
     }
+    return strategy;
   }
 
   /**
@@ -188,4 +208,107 @@ export class CarreraService {
       },
     };
   }
+
+  /**
+   * `commitRegistration` — write the Carrera row + emit the audit
+   * `log_eventos(tipo='carrera.registered')` row on the exceptional path.
+   *
+   * AD-5 audit policy (mirrors W-LOG-CONFLICT at
+   * `services/sync-queue.service.ts:481-489`):
+   *   - Happy path (confidence >= CONFIDENCE_THRESHOLD AND repo resolves):
+   *     NO `log_eventos` row.
+   *   - Below-threshold fallback (confidence < CONFIDENCE_THRESHOLD):
+   *     ONE `log_eventos` row with `metadata.fallback = 'manual-form'`,
+   *     `metadata.plataforma_id`, `metadata.trip_id`.
+   *   - Repo error: ONE `log_eventos` row with `metadata.error = '<message>'`,
+   *     `metadata.plataforma_id`, `metadata.trip_id`. The original
+   *     exception propagates AFTER the audit row is committed.
+   *
+   * The audit INSERT goes through `getDb()` from `db.service.ts` —
+   * the only legal write facade per Phase 1 AD-10 (`local-rls-facade`).
+   * The audit row is NOT enqueued into `sync_queue`; `log_eventos` is
+   * local-only and never goes to Supabase (mirroring W-LOG-CONFLICT).
+   *
+   * `tripId` is `crypto.randomUUID()` if not supplied; a re-confirm of
+   * the same M01 modal produces ONE row (idempotent via
+   * `UNIQUE(driver_id, trip_id)`).
+   *
+   * Sync enqueue is automatic: `carreraRepo.upsertByTripId` is the
+   * only legal `dbChange$` emitter (`services/carrera.repo.ts:218-236`),
+   * and the Phase 2 subscription at
+   * `services/sync-queue.service.ts:547-549` catches every Carrera
+   * write structurally. This service does NOT import `sync-queue.service`
+   * (R-8, AD-10).
+   */
+  async commitRegistration(
+    driverId: string,
+    suggestion: StrategySuggestion,
+    tripId?: string,
+  ): Promise<CarreraRow> {
+    const finalTripId = tripId ?? crypto.randomUUID();
+
+    try {
+      const row = await this.upsert(
+        driverId,
+        finalTripId,
+        suggestion.draft,
+      );
+
+      // Below-threshold audit — happy path emits nothing (AD-5).
+      if (suggestion.confidence < CONFIDENCE_THRESHOLD) {
+        await writeAuditRow(driverId, {
+          fallback: 'manual-form',
+          plataforma_id: row.plataforma_id,
+          trip_id: finalTripId,
+          confidence: suggestion.confidence,
+        });
+      }
+
+      return row;
+    } catch (err) {
+      // Error-path audit — written BEFORE the exception propagates
+      // so the audit row is visible in `log_eventos` even on failure
+      // (AD-5: "audit the exceptional path, not the happy path").
+      try {
+        await writeAuditRow(driverId, {
+          error: err instanceof Error ? err.message : String(err),
+          plataforma_id: suggestion.draft.plataforma_id,
+          trip_id: finalTripId,
+        });
+      } catch {
+        // Audit-write failure is non-fatal: the original error is
+        // what the caller cares about. Swallow to avoid masking it.
+      }
+      throw err;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Internal helper — single chokepoint for the audit `log_eventos` row.
+// ---------------------------------------------------------------------------
+
+/**
+ * `writeAuditRow` — insert one `log_eventos(tipo='carrera.registered')`
+ * row via the Phase 1 `LocalDatabase` facade. Called from
+ * `commitRegistration` on (a) below-threshold fallback OR (b) repo error.
+ *
+ * The dot-namespaced `tipo` matches the W-LOG-CONFLICT precedent at
+ * `services/sync-queue.service.ts:481-489`.
+ */
+async function writeAuditRow(
+  driverId: string,
+  metadata: Record<string, unknown>,
+): Promise<void> {
+  const db = await getDb();
+  db.run(
+    `INSERT INTO log_eventos (driver_id, tipo, metadata, created_at)
+     VALUES (?, ?, ?, ?)`,
+    [
+      driverId,
+      'carrera.registered',
+      fromJson(metadata),
+      new Date().toISOString(),
+    ],
+  );
 }
