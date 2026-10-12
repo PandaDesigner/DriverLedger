@@ -48,13 +48,22 @@ describe('strategy.types — cross-domain contract', () => {
   });
 
   it('exposes StrategySuggestInput shape (compile-time)', () => {
-    type Probe = Pick<StrategySuggestInput, 'raw' | 'context'>;
+    type Probe = Pick<StrategySuggestInput, 'raw' | 'context' | 'plataforma'>;
     const sample: Probe = {
       raw: 'pasted text',
       context: { fecha: '2026-10-11', horaLocal: '14:30', carreraActiva: false },
+      plataforma: {
+        id: 'a0eebc7e-0001-4000-8000-000000000001',
+        nombre: 'Uber',
+        comision: 25.0,
+        tipo_estrategia: 'uber_api',
+        metadata: {},
+        created_at: '2026-10-11 09:00:00',
+      },
     };
     expect(sample.raw).toBe('pasted text');
     expect(sample.context.fecha).toBe('2026-10-11');
+    expect(sample.plataforma?.tipo_estrategia).toBe('uber_api');
   });
 
   it('exposes StrategySuggestion shape (compile-time)', () => {
@@ -121,14 +130,22 @@ describe('strategy.types.ts — cross-domain isolation', () => {
     expect(source).not.toMatch(/from\s+['"]\.\.\/sync-queue\.service['"]/);
   });
 
-  it('has exactly one inter-module import (the CarreraPayload type)', async () => {
+  it('has type-only inter-module imports (CarreraPayload + PlataformaRow)', async () => {
     const source = await Bun.file(
       new URL('../strategy.types.ts', import.meta.url),
     ).text();
+    // Allow ONLY the two type-only imports that StrategySuggestInput +
+    // StrategySuggestion need (OI-1 added `PlataformaRow`). Runtime
+    // modules (DB, sync, ui) are forbidden.
     const importLines = source.match(/^import\s.+$/gm) ?? [];
-    const nonCarreraPayload = importLines.filter(
-      (line) => !line.includes('CarreraPayload'),
+    const nonTypeOnly = importLines.filter(
+      (line) =>
+        !line.includes('CarreraPayload') &&
+        !line.includes('PlataformaRow'),
     );
-    expect(nonCarreraPayload).toEqual([]);
+    expect(nonTypeOnly).toEqual([]);
+    // Both required imports are present.
+    expect(source).toMatch(/import\s+type\s+\{\s*CarreraPayload/);
+    expect(source).toMatch(/import\s+type\s+\{\s*PlataformaRow/);
   });
 });

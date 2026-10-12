@@ -23,6 +23,7 @@
  */
 
 import type { CarreraPayload } from '../carrera.repo';
+import type { PlataformaRow } from '../../data/sqlite/types';
 
 /**
  * Caller-supplied context (date, time, GPS hint if a carrera is active).
@@ -39,13 +40,25 @@ export interface StrategyContext {
 }
 
 /**
- * Raw driver input — paste of notification/screenshot text plus driver context.
+ * Raw driver input — paste of notification/screenshot text plus driver context
+ * plus the platform row the UI already resolved (OI-1 resolution; the
+ * strategy is self-contained and never reaches into the repo itself).
+ *
  * Future Phase 6 may add an `input.kind: 'paste' | 'stream'` discriminator
  * without breaking the interface (AD-11 forward-compat).
  */
 export interface StrategySuggestInput {
   raw: string;
   context: StrategyContext;
+  /**
+   * Resolved `PlataformaRow` for the platform the driver picked in M01.
+   * `CarreraService.suggestRegistration` injects this after looking the
+   * row up by `plataformaId`; strategies never resolve plataforma from
+   * a string. Optional in the type so stub/Phase 4 unit tests that
+   * exercise the strategy in isolation do not have to import the SQLite
+   * types module.
+   */
+  plataforma?: PlataformaRow;
 }
 
 /**
