@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { changeScenario } from '../demo/model';
 import { SCENARIO, type Scenario } from '../demo/contracts';
 import { useDemo } from '../demo/demo-provider';
-import { Action, Card, Copy, useTokens } from './primitives';
+import { Action, Card, Copy, useTokens } from './ui';
 import { rhythm } from '../theme/tokens';
 export const scenarioLabels: Record<Scenario, string> = {
   ready: 'Preparado',

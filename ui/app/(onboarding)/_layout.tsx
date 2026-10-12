@@ -1,7 +1,7 @@
 import { Redirect, Stack } from 'expo-router';
 import { ROUTE, SESSION } from '../../src/demo/contracts';
 import { useDemo } from '../../src/demo/demo-provider';
-import { useTokens } from '../../src/components/primitives';
+import { useTokens } from '../../src/components/ui';
 export default function OnboardingLayout() {
   const { state } = useDemo();
   const tokens = useTokens();

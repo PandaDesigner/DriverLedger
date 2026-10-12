@@ -2,7 +2,7 @@ import { router, usePathname, useLocalSearchParams } from 'expo-router';
 import { View, Pressable, Text } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KIND, ROUTE } from '../demo/contracts';
-import { useTokens } from './primitives';
+import { useTokens } from './ui';
 import { rhythm } from '../theme/tokens';
 export function BottomBar() {
   const pathname = usePathname();

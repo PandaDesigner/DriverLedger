@@ -1,5 +1,5 @@
 import { Stack } from 'expo-router';
-import { useTokens } from '../../src/components/primitives';
+import { useTokens } from '../../src/components/ui';
 export default function AuthLayout() {
   const tokens = useTokens();
   return (

@@ -5,7 +5,7 @@ import { useDemo } from '../demo/demo-provider';
 import { tripExample } from '../demo/fixtures';
 import { confirmTrip, nextTripId } from '../demo/model';
 import { DemoScreen } from '../components/demo-screen';
-import { Action, Card, Copy, Field, Message } from '../components/primitives';
+import { Action, Card, Copy, Field, Message } from '../components/ui';
 export function TripModal() {
   const { state, update } = useDemo();
   const [editing, setEditing] = useState(false);
