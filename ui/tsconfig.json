@@ -17,9 +17,8 @@
     "target": "esnext",
     "lib": ["esnext"],
     "allowJs": false,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
     "types": ["react", "react-native", "expo-router"]
   },

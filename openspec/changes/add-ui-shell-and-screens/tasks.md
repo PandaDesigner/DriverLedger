@@ -2,9 +2,9 @@
 
 ## 1. Puertas y compatibilidad
 
-- [ ] 1.1 Validar `openspec/changes/add-ui-shell-and-screens/` y obtener aprobación humana del plan, incluida aceptación de landscape y límites de demostración.
-- [ ] 1.2 Actualizar develop a origin/develop sin sobrescribir trabajo ajeno, registrar SHA y revisar cambios de fase 4/workspace; crear la rama desde esa base actualizada y commitear solo artefactos aprobados.
-- [ ] 1.3 Revisar APIs y compatibilidad instaladas de `ui/package.json` y `ui/app.json`; registrar bloqueos y solicitar aprobación antes de cualquier cambio de runtime/dependencias.
+- [x] 1.1 Validar `openspec/changes/add-ui-shell-and-screens/` y obtener aprobación humana del plan, incluida aceptación de landscape y límites de demostración.
+- [x] 1.2 Actualizar develop a origin/develop sin sobrescribir trabajo ajeno, registrar SHA y revisar cambios de fase 4/workspace; crear la rama desde esa base actualizada y commitear solo artefactos aprobados.
+- [x] 1.3 Revisar APIs y compatibilidad instaladas de `ui/package.json` y `ui/app.json`; registrar bloqueos y solicitar aprobación antes de cualquier cambio de runtime/dependencias.
 
 ## 2. Estado de demostración y pruebas primero
 
