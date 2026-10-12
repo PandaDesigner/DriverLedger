@@ -4,7 +4,8 @@
   "private": true,
   "description": "DriverLedger — Bun workspace root (Fase 0b: ui/ skeleton).",
   "workspaces": [
-    "ui"
+    "ui",
+    "services"
   ],
   "packageManager": "bun@1.3.12",
   "engines": {
