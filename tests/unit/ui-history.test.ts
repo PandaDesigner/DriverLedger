@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { KIND, PLATFORM, RANGE } from "../../ui/src/demo/contracts";
+import { KIND, PLATFORM, RANGE, SCENARIO } from "../../ui/src/demo/contracts";
 import { createDemoState } from "../../ui/src/demo/model";
 import {
   filterActivity,
@@ -61,6 +61,9 @@ describe("history presentation", () => {
     expect(
       hasProjection(initial, { ...initialFilter(), range: RANGE.WEEK }),
     ).toBe(false);
+  });
+  it("does not reuse the ordinary projection for the reached-goal scenario", () => {
+    expect(hasProjection({ ...createDemoState(), scenario: SCENARIO.GOAL }, initialFilter())).toBe(false);
   });
   it("validates incoming filter parameters once", () => {
     expect(parseHistoryKind(undefined)).toEqual({ ok: true, value: KIND.ALL });
