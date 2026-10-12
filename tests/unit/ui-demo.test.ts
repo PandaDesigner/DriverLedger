@@ -37,7 +37,8 @@ describe('isolated demonstration', () => {
   });
   it('sets empty/error/offline states explicitly', () => {
     const initial = createDemoState();
-    expect(changeScenario(initial, SCENARIO.EMPTY).activity).toEqual([]);
+    expect(changeScenario(initial, SCENARIO.EMPTY).activity).toEqual(initial.activity);
+    expect(changeScenario(changeScenario(initial, SCENARIO.EMPTY), SCENARIO.READY)).toEqual(initial);
     expect(changeScenario(initial, SCENARIO.ERROR).scenario).toBe(SCENARIO.ERROR);
     expect(changeScenario(initial, SCENARIO.OFFLINE).activity).toEqual(initial.activity);
   });

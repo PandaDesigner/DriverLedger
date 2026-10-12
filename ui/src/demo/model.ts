@@ -2,7 +2,7 @@ import { CATEGORY, DEMO_DATE, KIND, SCENARIO, SESSION, THEME, type Activity, typ
 import { demoActivity } from './fixtures';
 const emptyDraft: ExpenseDraft = { amount: '', category: CATEGORY[0], date: DEMO_DATE, note: '' };
 export function createDemoState(): DemoState {
-  return { session: SESSION.LOGIN, scenario: SCENARIO.READY, theme: THEME.SYSTEM, platforms: [], activity: demoActivity.map((entry) => ({ ...entry })), draft: { ...emptyDraft }, projectionAvailable: true, confirmed: [] };
+  return { session: SESSION.LOGIN, scenario: SCENARIO.READY, theme: THEME.SYSTEM, platforms: [], activity: demoActivity.map((entry) => ({ ...entry })), draft: { ...emptyDraft }, projectionAvailable: true, confirmed: [], preferences: { target: '200000', notifications: false } };
 }
 export function enterDemo(state: DemoState): DemoState { return { ...state, session: SESSION.ONBOARDING }; }
 export function selectPlatforms(state: DemoState, platforms: readonly Platform[]): DemoState { return { ...state, platforms: [...new Set(platforms)] }; }

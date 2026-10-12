@@ -25,6 +25,7 @@ export type DemoState = Readonly<{
   session: typeof SESSION[keyof typeof SESSION]; scenario: Scenario; theme: Theme;
   platforms: readonly Platform[]; activity: readonly Activity[]; draft: ExpenseDraft;
   projectionAvailable: boolean; confirmed: readonly string[];
+  preferences: Readonly<{ target: string; notifications: boolean }>;
 }>;
 export type HistoryFilter = Readonly<{
   range: typeof RANGE[keyof typeof RANGE]; platform: Platform | typeof PLATFORM.ALL;
