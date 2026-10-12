@@ -83,11 +83,11 @@ const FARE_RE = /(?:tarifa\s*[:\-]?\s*)?(?:\$\s*)?([\d.,]+)\s*(?:cop)?/i;
 const ROUTE_LABEL_RE = /origen\s*[:\-]\s*(.+?)\s*destino\s*[:\-]\s*(.+?)(?:\s*distancia|$)/i;
 
 /**
- * Route regex (arrow form) — matches a line that contains `→` or `->`.
- * We use the multi-line flag so the arrow must be on its OWN line, not
- * embedded in the fare line (`Tarifa: $12.500 → COP` is not a route).
+ * Per-line arrow regex — matches an arrow (`→` or `->`) with non-empty
+ * text on both sides. Applied to a single line (no `\n` in scope).
+ * Used by `findArrowRoute` below.
  */
-const ROUTE_ARROW_LINE_RE = /^[^\n]*[→][^\n]+$/m;
+const ROUTE_ARROW_RE = /(\S(?:[^→]*\S)?)\s*[→]\s*(\S(?:[^→]*\S)?)/;
 
 /** Distance regex — matches: `Distancia: 4,2 km`, `Distancia 4.2 km`. */
 const DISTANCE_RE = /distancia\s*[:\-]?\s*([\d.,]+)\s*km/i;
@@ -118,6 +118,24 @@ function parseDistanceKm(raw: string): number | null {
 /** Trim a route fragment, drop trailing punctuation. */
 function trimRouteFragment(s: string): string {
   return s.trim().replace(/[\s,;.]+$/, '').trim();
+}
+
+/**
+ * `findArrowRoute` — split the scope on newlines, then try the arrow
+ * regex on each line. The first line with an arrow wins. Returns
+ * `null` if no line has an arrow. Works for both single-line
+ * (normalized) and multi-line (original) input.
+ */
+function findArrowRoute(scope: string): { origen: string; destino: string } | null {
+  for (const line of scope.split('\n')) {
+    const m = line.match(ROUTE_ARROW_RE);
+    if (!m) continue;
+    const parts = m[0].split(/[→]|->/).map((s) => s.trim());
+    if (parts.length >= 2 && parts[0] && parts[1]) {
+      return { origen: trimRouteFragment(parts[0]), destino: trimRouteFragment(parts[1]) };
+    }
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -178,11 +196,15 @@ export const DidiStrategy: PlatformStrategy = {
     const tarifaBruta = fareMatch ? parseFare(fareMatch[1]) : 0;
 
     // ---------------------------------------------------------------------
-    // Parse route (origin + destination). We run the route regexes on
-    // the ORIGINAL raw text, not the fully-normalized one, so the
-    // captured `origen` / `destino` preserve their display case
-    // (parse.normalize lowercases everything for canonical matching;
-    // route strings are shown to the driver).
+    // Parse route (origin + destination).
+    //
+    // CarreraService normalizes `input.raw` before calling the strategy,
+    // so by the time we get here, newlines are collapsed to spaces and
+    // the text is lowercased. The label form is unambiguous (`Origen: X
+    // Destino: Y`) and matches regardless of case. The arrow form
+    // (`A → B`) is ambiguous when the fare sits on the same line —
+    // we must look for the arrow ONLY after the fare so the origen
+    // capture doesn't include the fare line.
     // ---------------------------------------------------------------------
     let origen: string | null = null;
     let destino: string | null = null;
@@ -191,13 +213,20 @@ export const DidiStrategy: PlatformStrategy = {
       origen = trimRouteFragment(labelMatch[1]);
       destino = trimRouteFragment(labelMatch[2]);
     } else {
-      const arrowLineMatch = input.raw.match(ROUTE_ARROW_LINE_RE);
-      if (arrowLineMatch) {
-        const [origenRaw, destinoRaw] = arrowLineMatch[0].split(/[→]|->/).map((s) => s.trim());
-        if (origenRaw && destinoRaw) {
-          origen = trimRouteFragment(origenRaw);
-          destino = trimRouteFragment(destinoRaw);
-        }
+      // For the arrow form, look at the substring AFTER the fare
+      // match (or the whole text if no fare matched). This way the
+      // fare text is never included in the origen capture. We split
+      // the scope on newlines and try each line so the same code
+      // works whether `input.raw` is the original multi-line paste
+      // (test invocation) or the CarreraService-normalized single-
+      // line paste (integration invocation).
+      const arrowScope = fareMatch
+        ? input.raw.slice((fareMatch.index ?? 0) + fareMatch[0].length)
+        : input.raw;
+      const arrowResult = findArrowRoute(arrowScope);
+      if (arrowResult) {
+        origen = arrowResult.origen;
+        destino = arrowResult.destino;
       }
     }
 

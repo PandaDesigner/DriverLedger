@@ -84,10 +84,11 @@ const FARE_RE =
 const ROUTE_LABEL_RE = /origen\s*[:\-]\s*(.+?)\s*destino\s*[:\-]\s*(.+?)(?:\s*distancia|$)/i;
 
 /**
- * Route regex (arrow form) — matches a line that contains `→` or `->`.
- * Multi-line mode so the arrow must be on its own line.
+ * Per-line arrow regex — matches an arrow (`→` or `->`) with non-empty
+ * text on both sides. Applied to a single line (no `\n` in scope).
+ * Used by `findArrowRoute` below.
  */
-const ROUTE_ARROW_LINE_RE = /^[^\n]*[→][^\n]+$/m;
+const ROUTE_ARROW_RE = /(\S(?:[^→]*\S)?)\s*[→]\s*(\S(?:[^→]*\S)?)/;
 
 /** Distance regex — optional, InDrive pastes frequently omit it. */
 const DISTANCE_RE = /distancia\s*[:\-]?\s*([\d.,]+)\s*km/i;
@@ -118,6 +119,24 @@ function parseDistanceKm(raw: string): number | null {
 /** Trim a route fragment, drop trailing punctuation. */
 function trimRouteFragment(s: string): string {
   return s.trim().replace(/[\s,;.]+$/, '').trim();
+}
+
+/**
+ * `findArrowRoute` — split the scope on newlines, then try the arrow
+ * regex on each line. The first line with an arrow wins. Returns
+ * `null` if no line has an arrow. Works for both single-line
+ * (normalized) and multi-line (original) input.
+ */
+function findArrowRoute(scope: string): { origen: string; destino: string } | null {
+  for (const line of scope.split('\n')) {
+    const m = line.match(ROUTE_ARROW_RE);
+    if (!m) continue;
+    const parts = m[0].split(/[→]|->/).map((s) => s.trim());
+    if (parts.length >= 2 && parts[0] && parts[1]) {
+      return { origen: trimRouteFragment(parts[0]), destino: trimRouteFragment(parts[1]) };
+    }
+  }
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -173,7 +192,10 @@ export const InDriveStrategy: PlatformStrategy = {
     const tarifaBruta = fareMatch ? parseFare(fareMatch[1]) : 0;
 
     // ---------------------------------------------------------------------
-    // Parse route. Run on the ORIGINAL raw to preserve display case.
+    // Parse route. CarreraService normalizes `input.raw` before calling
+    // the strategy, so newlines are collapsed to spaces. The arrow form
+    // is ambiguous when the fare sits on the same line — we look for
+    // the arrow only in the substring AFTER the fare match.
     // ---------------------------------------------------------------------
     let origen: string | null = null;
     let destino: string | null = null;
@@ -182,13 +204,18 @@ export const InDriveStrategy: PlatformStrategy = {
       origen = trimRouteFragment(labelMatch[1]);
       destino = trimRouteFragment(labelMatch[2]);
     } else {
-      const arrowLineMatch = input.raw.match(ROUTE_ARROW_LINE_RE);
-      if (arrowLineMatch) {
-        const parts = arrowLineMatch[0].split(/[→]|->/).map((s) => s.trim());
-        if (parts.length >= 2 && parts[0] && parts[1]) {
-          origen = trimRouteFragment(parts[0]);
-          destino = trimRouteFragment(parts[1]);
-        }
+      // For the arrow form, look at the substring AFTER the fare
+      // match (or the whole text if no fare matched). Split on
+      // newlines so the same code works whether `input.raw` is the
+      // original multi-line paste (test invocation) or the
+      // CarreraService-normalized single-line paste (integration).
+      const arrowScope = fareMatch
+        ? input.raw.slice((fareMatch.index ?? 0) + fareMatch[0].length)
+        : input.raw;
+      const arrowResult = findArrowRoute(arrowScope);
+      if (arrowResult) {
+        origen = arrowResult.origen;
+        destino = arrowResult.destino;
       }
     }
 

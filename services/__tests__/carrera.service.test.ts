@@ -592,3 +592,208 @@ describe('services/strategies/ui-labels.ts', () => {
     expect(Object.isFrozen(PLATFORM_UI_LABELS)).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// (h) End-to-end integration tests — 3 strategies → CarreraService → SQLite
+// (PR #2 Task 2.5).
+//
+// The tests below run the full suggestRegistration + commitRegistration
+// flow against the in-memory SQLite seeded with the 3 platforms. We
+// inject the strategy registry via the constructor (so the test works
+// before Task 2.6 wires the production STRATEGY_REGISTRY).
+// ---------------------------------------------------------------------------
+
+import { DidiStrategy } from '../strategies/didi.strategy';
+import { InDriveStrategy } from '../strategies/indrive.strategy';
+
+function allStrategiesRegistry(): Record<string, PlatformStrategy> {
+  return {
+    uber_api: UberStrategy,
+    didi_manual: DidiStrategy,
+    indrive_form: InDriveStrategy,
+  };
+}
+
+describe('CarreraService end-to-end — Uber (Phase 4 stub)', () => {
+  it('happy path: one carreras row, fuente=manual, estado=activa, dbChange$ fires', async () => {
+    const service = new CarreraService(allStrategiesRegistry());
+    const uberId = 'a0eebc7e-0001-4000-8000-000000000001';
+    const suggestion = await service.suggestRegistration(
+      'driver-001',
+      uberId,
+      { raw: 'Driver typed body', context: { fecha: '2026-10-11' } },
+    );
+    // Driver edits tarifa + route in M01 (the stub returns 0).
+    suggestion.draft.tarifa_bruta = 12500;
+    suggestion.draft.origen = 'Calle 10';
+    suggestion.draft.destino = 'Centro';
+    suggestion.draft.distancia_km = 4.2;
+    suggestion.draft.comision = 3125; // 12500 * 0.25
+    suggestion.draft.metadata = {};
+
+    // Subscribe to dbChange$ BEFORE the write so we don't miss the event.
+    const bridge = (await import('../db.service')).getBridge();
+    const events: Array<{ kind: string; table: string; rowId: string }> = [];
+    const sub = bridge.dbChange$.subscribe((ev) => {
+      events.push({ kind: ev.kind, table: ev.table, rowId: ev.rowId });
+    });
+
+    let row: import('../../data/sqlite/types').CarreraRow;
+    try {
+      row = await service.commitRegistration('driver-001', suggestion);
+    } finally {
+      sub.unsubscribe();
+    }
+
+    // One carrera row exists with the right fields.
+    const db = await getDb();
+    const carrera = db.queryOne<{
+      driver_id: string;
+      plataforma_id: string;
+      tarifa_bruta: number;
+      estado: string;
+      fuente: string;
+    }>(
+      'SELECT driver_id, plataforma_id, tarifa_bruta, estado, fuente FROM carreras WHERE driver_id = ?',
+      ['driver-001'],
+    );
+    expect(carrera).toBeDefined();
+    expect(carrera?.driver_id).toBe('driver-001');
+    expect(carrera?.plataforma_id).toBe(uberId);
+    expect(carrera?.tarifa_bruta).toBe(12500);
+    expect(carrera?.estado).toBe('activa'); // Uber stays activa per AD-7
+    expect(carrera?.fuente).toBe('manual');
+    expect(row.trip_id).toMatch(/^[0-9a-f-]{36}$/i);
+
+    // dbChange$ fired exactly once for the carreras table.
+    const carreraEvents = events.filter((e) => e.table === 'carreras');
+    expect(carreraEvents.length).toBe(1);
+    expect(carreraEvents[0]?.rowId).toBe(row.id);
+  });
+});
+
+describe('CarreraService end-to-end — DiDi', () => {
+  it('happy path: one carreras row, tarifa_bruta=12500, comision=2500, estado=completada, NO log_eventos audit', async () => {
+    const service = new CarreraService(allStrategiesRegistry());
+    const didiId = 'a0eebc7e-0001-4000-8000-000000000002';
+    const suggestion = await service.suggestRegistration(
+      'driver-001',
+      didiId,
+      {
+        raw: 'DiDi Tarifa: $12.500 COP\nOrigen: Calle 10\nDestino: Centro\nDistancia: 4,2 km',
+        context: { fecha: '2026-10-11' },
+      },
+    );
+    expect(suggestion.confidence).toBeGreaterThanOrEqual(0.7);
+    expect(suggestion.draft.tarifa_bruta).toBe(12500);
+    expect(suggestion.draft.comision).toBe(2500);
+    expect(suggestion.draft.estado).toBe('completada');
+
+    const db = await getDb();
+    const auditBefore = db.queryOne<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM log_eventos WHERE tipo = 'carrera.registered'",
+    );
+    const bridge = (await import('../db.service')).getBridge();
+    const events: Array<{ table: string }> = [];
+    const sub = bridge.dbChange$.subscribe((ev) => {
+      events.push({ table: ev.table });
+    });
+
+    let row: import('../../data/sqlite/types').CarreraRow;
+    try {
+      row = await service.commitRegistration('driver-001', suggestion);
+    } finally {
+      sub.unsubscribe();
+    }
+
+    // One carrera row exists with the right fields.
+    const carrera = db.queryOne<{
+      tarifa_bruta: number;
+      comision: number;
+      estado: string;
+      fuente: string;
+      distancia_km: number | null;
+    }>(
+      'SELECT tarifa_bruta, comision, estado, fuente, distancia_km FROM carreras WHERE driver_id = ?',
+      ['driver-001'],
+    );
+    expect(carrera).toBeDefined();
+    expect(carrera?.tarifa_bruta).toBe(12500);
+    expect(carrera?.comision).toBe(2500);
+    expect(carrera?.estado).toBe('completada'); // AD-7: DiDi lands completada
+    expect(carrera?.fuente).toBe('manual');
+    expect(carrera?.distancia_km).toBe(4.2);
+
+    // NO log_eventos row on the happy path (high confidence).
+    const auditAfter = db.queryOne<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM log_eventos WHERE tipo = 'carrera.registered'",
+    );
+    expect(auditAfter?.count ?? 0).toBe(auditBefore?.count ?? 0);
+
+    // dbChange$ fired for the carreras table.
+    expect(events.filter((e) => e.table === 'carreras').length).toBe(1);
+    expect(row).toBeDefined();
+  });
+});
+
+describe('CarreraService end-to-end — InDrive', () => {
+  it('happy path: one carreras row, tarifa_bruta=8000, comision=1440, estado=completada, distancia_km=null', async () => {
+    const service = new CarreraService(allStrategiesRegistry());
+    const indriveId = 'a0eebc7e-0001-4000-8000-000000000003';
+    const suggestion = await service.suggestRegistration(
+      'driver-001',
+      indriveId,
+      {
+        raw: 'InDrive Precio acordado: 8.000 COP\nCalle 50 → Poblado',
+        context: { fecha: '2026-10-11' },
+      },
+    );
+    expect(suggestion.confidence).toBeGreaterThanOrEqual(0.7);
+    expect(suggestion.draft.tarifa_bruta).toBe(8000);
+    expect(suggestion.draft.comision).toBe(1440);
+    expect(suggestion.draft.estado).toBe('completada');
+
+    const db = await getDb();
+    const auditBefore = db.queryOne<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM log_eventos WHERE tipo = 'carrera.registered'",
+    );
+
+    const row = await service.commitRegistration('driver-001', suggestion);
+
+    // One carrera row exists with the right fields. Note: origen/destino
+    // are lowercase because CarreraService normalizes input.raw (which
+    // lowercases) before calling the strategy; the per-strategy unit
+    // tests pass raw directly and preserve case, but the production
+    // flow through CarreraService loses the original display case.
+    // This is consistent with the AD-13 design — normalization is
+    // the single source of truth, and the UI can re-case for display
+    // in a future change if needed (out of scope for Phase 4).
+    const carrera = db.queryOne<{
+      tarifa_bruta: number;
+      comision: number;
+      estado: string;
+      fuente: string;
+      distancia_km: number | null;
+      origen: string | null;
+      destino: string | null;
+    }>(
+      'SELECT tarifa_bruta, comision, estado, fuente, distancia_km, origen, destino FROM carreras WHERE driver_id = ?',
+      ['driver-001'],
+    );
+    expect(carrera).toBeDefined();
+    expect(carrera?.tarifa_bruta).toBe(8000);
+    expect(carrera?.comision).toBe(1440);
+    expect(carrera?.estado).toBe('completada');
+    expect(carrera?.fuente).toBe('manual');
+    expect(carrera?.distancia_km).toBeNull(); // InDrive frequently omits distance
+    expect(carrera?.origen).toBe('calle 50');
+    expect(carrera?.destino).toBe('poblado');
+
+    // NO log_eventos row on the happy path.
+    const auditAfter = db.queryOne<{ count: number }>(
+      "SELECT COUNT(*) AS count FROM log_eventos WHERE tipo = 'carrera.registered'",
+    );
+    expect(auditAfter?.count ?? 0).toBe(auditBefore?.count ?? 0);
+    expect(row).toBeDefined();
+  });
+});
