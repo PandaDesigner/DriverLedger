@@ -2,24 +2,26 @@
 
 ## Resultado
 
-BLOCKED para integración. Código de demostración implementado; aceptación visual/nativa pendiente. Tareas: 24 totales, 18 marcadas y 6 abiertas (2.4, 3.3, 3.4, 5.2, 5.3, 5.5). Sin merge ni archivo. La base usada fue `9627416`, que ya contiene cambios de fase 4; esta rama no modifica `data/` ni `services/`.
+BLOCKED para integración. Código de demostración implementado; aceptación visual/nativa pendiente. Tareas: 24 totales, 18 marcadas y 6 abiertas (2.4, 3.3, 3.4, 5.2, 5.3, 5.5). Sin merge de fase 3 ni archivo. La base inicial fue `9627416`; se hizo rebase sin conflictos sobre `origin/develop` en `8f23143` después del merge del PR #2 de fase 4. El diff de esta rama no modifica `data/` ni `services/`.
 
 ## Ejecución real
 
-- `bun test`: 162 aprobadas, 0 fallidas, 15 archivos.
-- `bun test tests/unit tests/integration`: 15 aprobadas, 0 fallidas; son pruebas de lógica y revisión estática de imports, no render RN.
+- Después del rebase, `bun test`: 235 aprobadas, 0 fallidas, 18 archivos.
+- Suites UI ejecutadas con cobertura: 16 aprobadas, 0 fallidas; son pruebas de lógica y revisión estática de imports, no render RN.
 - TypeScript UI y `tests/tsconfig.json`: salida 0.
 - ESLint UI y tests raíz: salida 0 tras corregir el efecto duplicado de Historial. La carga inicial fue lenta; ejecuciones con timeout de hasta 600 segundos terminaron.
 - Prettier aplicado a rutas, source, configuración y tests.
-- Expo export iOS/Android: salida 0; bundles Hermes de aproximadamente 3 MB en `/tmp/driverledger-ui-native-export`.
-- Expo install check aprobó versiones alineadas; safe-area fue declarado explícitamente después.
-- `cd tests && bun test --coverage`: 15 aprobadas; 100% líneas y funciones de history.ts, model.ts y navigation.ts, excluyendo fixtures/contratos. Umbrales de 80% configurados. No acredita pantallas ni branches/statements.
+- Expo export iOS/Android repetido después del rebase: salida 0; ambos bundles Hermes en `/tmp/driverledger-ui-post-rebase-export`.
+- Expo install check repetido después del rebase: dependencias al día, salida 0, incluyendo safe-area declarado.
+- `cd tests && bun test --coverage`: 16 aprobadas; 100% líneas y funciones de history.ts, model.ts y navigation.ts, excluyendo fixtures/contratos. Umbrales de 80% configurados. No acredita pantallas ni branches/statements.
 
 ## Evidencia TDD
 
-`3bc676f`: 11 fallos por funciones de demostración sin implementar. `3c4cc3d`: las mismas 11 pruebas pasan.
+Commits alcanzables después del rebase: `f2e39a6`, RED de 11 fallos por funciones sin implementar; `d4b6d2b`, GREEN de las mismas 11 pruebas.
 
-`9b0fb76`: reproducción del escenario vacío destructivo, 5 pasan/1 falla. `49ab550`: 11 pasan tras preservar datos de sesión.
+`2dda8ac`: reproducción del escenario vacío destructivo, 5 pasan/1 falla. `752c008`: 11 pasan tras preservar datos de sesión.
+
+`716134d`: RED de proyección incompatible con meta alcanzada, 5 pasan/1 falla. `6a87766`: corrección y GREEN, con 235 pruebas globales y 16 UI aprobadas. También se corrigieron la tarifa editada, el resumen con parámetros inválidos y las identidades de navegación. Revisión Sideroom final sin infracciones pendientes.
 
 Las pruebas de navegación, aislamiento e integración se añadieron después del core; no se presenta un RED inexistente para esas suites ni para render de pantallas.
 
