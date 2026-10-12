@@ -142,7 +142,8 @@ export class CarreraService {
     if (strategy === undefined) {
       console.warn(
         `[carrera.service] strategy lookup miss: tipo_estrategia='${tipo}' ` +
-          `(phase 4 ships only uber_api; PR #2 fills in didi_manual + indrive_form)`,
+          `(phase 4 ships uber_api + didi_manual + indrive_form; ` +
+          `did the user add a new plataforma row without registering a strategy?)`,
       );
       throw new UnknownStrategyError(tipo);
     }

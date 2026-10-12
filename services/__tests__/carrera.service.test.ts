@@ -164,10 +164,13 @@ describe('CarreraService.getStrategyByTipo', () => {
     expect(service.getStrategyByTipo('uber_api')).toBe(UberStrategy);
   });
 
-  it("throws UnknownStrategyError on missing keys (PR #1 boundary)", () => {
+  it("throws UnknownStrategyError on unknown keys (PR #2 Task 2.6 — all 3 seeded strategies now resolve)", () => {
     const service = new CarreraService();
-    expect(() => service.getStrategyByTipo('didi_manual')).toThrow(UnknownStrategyError);
-    expect(() => service.getStrategyByTipo('indrive_form')).toThrow(UnknownStrategyError);
+    // PR #1 boundary asserted didi_manual + indrive_form were unknown;
+    // Task 2.6 registers them. Unknown keys (rappi, empty, undefined)
+    // still throw.
+    expect(() => service.getStrategyByTipo('rappi')).toThrow(UnknownStrategyError);
+    expect(() => service.getStrategyByTipo('')).toThrow(UnknownStrategyError);
   });
 });
 

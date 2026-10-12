@@ -6,27 +6,28 @@
  * class, and a new entry in `STRATEGY_REGISTRY` — never a migration
  * (`docs/RFC-002-modelo-datos.md §Open-closed`).
  *
- * Phase 4 ships with one entry (UberStrategy at `tipo_estrategia='uber_api'`);
- * PR #2 Task 2.2 + 2.3 add `didi_manual` + `indrive_form`. Lookup misses
- * throw a typed `UnknownStrategyError` so `CarreraService` and the UI can
- * react defensively (`CarreraService.getStrategyByTipo` `console.warn`s
- * the error and re-throws).
+ * PR #1 shipped with one entry (UberStrategy at `tipo_estrategia='uber_api'`).
+ * PR #2 Task 2.6 adds the other two seeded entries (`didi_manual`,
+ * `indrive_form`) so all 3 platforms resolve from the registry. Lookup
+ * misses throw a typed `UnknownStrategyError` so `CarreraService` and
+ * the UI can react defensively.
  */
 
 import type { PlatformStrategy } from './strategy.types';
 import { UnknownStrategyError } from './strategy.types';
 import { UberStrategy } from './uber.strategy';
+import { DidiStrategy } from './didi.strategy';
+import { InDriveStrategy } from './indrive.strategy';
 
 // ---------------------------------------------------------------------------
 // Type-narrowed key set. Includes every value from `plataformas.tipo_estrategia`
-// the seed migration installs (`data/migrations/0003_seeds.sql:24-34`). PR #2
-// Tasks 2.2 + 2.3 extend the union as DiDi / InDrive land.
+// the seed migration installs (`data/migrations/0003_seeds.sql:24-34`).
 // ---------------------------------------------------------------------------
 
 /**
  * Literal-string union over the seed `tipo_estrategia` values. Exported
- * so consumers (registry tests, future CarreraService callers) can
- * narrow without re-declaring the union.
+ * so consumers (registry tests, `PLATFORM_UI_LABELS` in `ui-labels.ts`)
+ * can narrow without re-declaring the union.
  */
 export type TipoEstrategia = 'uber_api' | 'didi_manual' | 'indrive_form';
 
@@ -35,19 +36,16 @@ export type TipoEstrategia = 'uber_api' | 'didi_manual' | 'indrive_form';
 // ---------------------------------------------------------------------------
 
 /**
- * The boot-time strategy registry. Phase 4 ships with one entry; PR #2
- * fills in the other two. The object is `Object.freeze`d so runtime
- * mutation is impossible even if a future strategy import path becomes
- * dynamic (defensive — the project's "no auto-discovery" precedent at
- * `data/sqlite/migrations.ts` is honoured).
+ * The boot-time strategy registry. The 3 seeded entries are wired here;
+ * the object is `Object.freeze`d so runtime mutation is impossible.
  *
  * `as const` lets TypeScript narrow to the literal key set; the
  * exported `TipoEstrategia` is the public-facing union.
  */
 export const STRATEGY_REGISTRY = Object.freeze({
   uber_api: UberStrategy,
-  // PR #2 Task 2.2 adds: didi_manual: DidiStrategy,
-  // PR #2 Task 2.3 adds: indrive_form: InDriveStrategy.
+  didi_manual: DidiStrategy,
+  indrive_form: InDriveStrategy,
 } as const);
 
 /**
