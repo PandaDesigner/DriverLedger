@@ -11,37 +11,42 @@ export function BottomBar() {
   const insets = useSafeAreaInsets();
   const current = pathname.endsWith('/history')
     ? kind === KIND.EXPENSE
-      ? 'Gastos'
-      : 'Historial'
+      ? KIND.EXPENSE
+      : ROUTE.HISTORY
     : pathname.endsWith('/settings')
-      ? 'Ajustes'
-      : 'Dashboard';
+      ? ROUTE.SETTINGS
+      : ROUTE.DASHBOARD;
   const controls = [
     {
+      id: ROUTE.DASHBOARD,
       title: 'Dashboard',
       press: () => {
         router.replace(ROUTE.DASHBOARD);
       },
     },
     {
+      id: ROUTE.HISTORY,
       title: 'Historial',
       press: () => {
         router.replace({ pathname: ROUTE.HISTORY, params: { kind: KIND.ALL } });
       },
     },
     {
+      id: ROUTE.TRIP,
       title: 'Nuevo viaje',
       press: () => {
         router.push(ROUTE.TRIP);
       },
     },
     {
+      id: KIND.EXPENSE,
       title: 'Gastos',
       press: () => {
         router.replace({ pathname: ROUTE.HISTORY, params: { kind: KIND.EXPENSE } });
       },
     },
     {
+      id: ROUTE.SETTINGS,
       title: 'Ajustes',
       press: () => {
         router.replace(ROUTE.SETTINGS);
@@ -61,10 +66,10 @@ export function BottomBar() {
     >
       {controls.map((control) => (
         <Pressable
-          key={control.title}
+          key={control.id}
           accessibilityRole="button"
           accessibilityLabel={control.title}
-          accessibilityState={{ selected: current === control.title }}
+          accessibilityState={{ selected: current === control.id }}
           onPress={control.press}
           style={{
             flex: 1,
@@ -72,7 +77,7 @@ export function BottomBar() {
             minWidth: rhythm.target,
             justifyContent: 'center',
             padding: 4,
-            borderBottomWidth: current === control.title ? 3 : 0,
+            borderBottomWidth: current === control.id ? 3 : 0,
             borderColor: tokens.accent,
           }}
         >
@@ -81,7 +86,7 @@ export function BottomBar() {
               color: tokens.ink,
               textAlign: 'center',
               fontSize: 12,
-              fontWeight: current === control.title ? '700' : '400',
+              fontWeight: current === control.id ? '700' : '400',
             }}
           >
             {control.title}

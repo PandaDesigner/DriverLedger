@@ -1,17 +1,16 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
-import { DEMO_DATE, KIND, PLATFORM, ROUTE, SCENARIO } from '../demo/contracts';
+import { DEMO_DATE, KIND, PLATFORM, ROUTE, SCENARIO, type Platform } from '../demo/contracts';
 import { useDemo } from '../demo/demo-provider';
+import { tripExample } from '../demo/fixtures';
 import { confirmTrip, nextTripId } from '../demo/model';
 import { DemoScreen } from '../components/demo-screen';
 import { Action, Card, Copy, Field, Message } from '../components/primitives';
 export function TripModal() {
   const { state, update } = useDemo();
   const [editing, setEditing] = useState(false);
-  const [amount, setAmount] = useState('18000');
-  const [platform, setPlatform] = useState(
-    PLATFORM.UBER as typeof PLATFORM.UBER | typeof PLATFORM.DIDI | typeof PLATFORM.INDRIVE,
-  );
+  const [amount, setAmount] = useState<string>(tripExample.fare);
+  const [platform, setPlatform] = useState<Platform>(tripExample.platform);
   const [feedback, setFeedback] = useState('');
   const [id] = useState(() => nextTripId(state));
   const saved = state.confirmed.includes(id);
@@ -58,10 +57,14 @@ export function TripModal() {
         <Copy>El Poblado a Laureles</Copy>
         <Copy>Fuente: manual ficticia · {DEMO_DATE} 10:30</Copy>
         <Copy>Duración: 20 min de ejemplo</Copy>
-        <Copy>
-          Gasolina estimada: 2000 COP · comisión: 3000 COP · neto: 13000 COP. Valores precargados,
-          no calculados.
-        </Copy>
+        {amount === tripExample.fare && platform === tripExample.platform ? (
+          <Copy>
+            Gasolina estimada: 2000 COP · comisión: 3000 COP · neto: 13000 COP. Valores precargados,
+            no calculados.
+          </Copy>
+        ) : (
+          <Copy>Proyección de gasolina, comisión y neto no disponible para el viaje editado.</Copy>
+        )}
         {editing && (
           <>
             <Field

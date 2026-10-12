@@ -34,8 +34,8 @@ export function AuthScreen({ mode }: { mode: AuthMode }) {
       return;
     }
     if (
-      [SCENARIO.OFFLINE, SCENARIO.ERROR, SCENARIO.INVALID, SCENARIO.UNKNOWN].includes(
-        state.scenario as typeof SCENARIO.ERROR,
+      [SCENARIO.OFFLINE, SCENARIO.ERROR, SCENARIO.INVALID, SCENARIO.UNKNOWN].some(
+        (scenario) => scenario === state.scenario,
       )
     ) {
       setFeedback(

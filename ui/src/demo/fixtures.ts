@@ -1,4 +1,5 @@
 import { DEMO_DATE, KIND, PLATFORM, type Activity } from './contracts';
+export const tripExample = { fare: '18000', platform: PLATFORM.UBER } as const;
 export const demoActivity: readonly Activity[] = [
   {
     id: 'trip-1',

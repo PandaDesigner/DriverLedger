@@ -130,7 +130,7 @@ export function HistoryScreen() {
             {!parsed.ok && <Message>{parsed.message}</Message>}
           </Card>
           <Card>
-            {hasProjection(state, filter) ? (
+            {parsed.ok && validRange && hasProjection(state, filter) ? (
               <>
                 <Copy>Neto de ejemplo: {money(projection.net)}</Copy>
                 <Copy>

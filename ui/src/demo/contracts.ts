@@ -16,7 +16,7 @@ export const SCENARIO = {
 } as const;
 export type Scenario = (typeof SCENARIO)[keyof typeof SCENARIO];
 export const PLATFORM = { UBER: 'Uber', DIDI: 'DiDi', INDRIVE: 'InDrive', ALL: 'Todas' } as const;
-export type Platform = Exclude<(typeof PLATFORM)[keyof typeof PLATFORM], 'Todas'>;
+export type Platform = Exclude<(typeof PLATFORM)[keyof typeof PLATFORM], typeof PLATFORM.ALL>;
 export const KIND = { ALL: 'all', TRIP: 'trip', EXPENSE: 'expense' } as const;
 export const RANGE = { TODAY: 'today', WEEK: 'week', MONTH: 'month', CUSTOM: 'custom' } as const;
 export const THEME = { SYSTEM: 'system', LIGHT: 'light', DARK: 'dark' } as const;

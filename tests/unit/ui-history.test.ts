@@ -63,7 +63,12 @@ describe("history presentation", () => {
     ).toBe(false);
   });
   it("does not reuse the ordinary projection for the reached-goal scenario", () => {
-    expect(hasProjection({ ...createDemoState(), scenario: SCENARIO.GOAL }, initialFilter())).toBe(false);
+    expect(
+      hasProjection(
+        { ...createDemoState(), scenario: SCENARIO.GOAL },
+        initialFilter(),
+      ),
+    ).toBe(false);
   });
   it("validates incoming filter parameters once", () => {
     expect(parseHistoryKind(undefined)).toEqual({ ok: true, value: KIND.ALL });

@@ -74,6 +74,7 @@ export function hasProjection(state: DemoState, filter: HistoryFilter): boolean 
   return (
     state.projectionAvailable &&
     state.scenario !== SCENARIO.EMPTY &&
+    state.scenario !== SCENARIO.GOAL &&
     filter.range === RANGE.TODAY &&
     filter.platform === PLATFORM.ALL &&
     filter.kind === KIND.ALL

@@ -62,7 +62,7 @@ export function DashboardScreen() {
       </Card>
       <Card>
         <Copy large>Tu jornada</Copy>
-        {state.projectionAvailable && state.scenario !== SCENARIO.EMPTY ? (
+        {state.projectionAvailable && state.scenario !== SCENARIO.EMPTY && !reached ? (
           <>
             <Copy>
               {projection.trips} viajes · Ingresos: {money(projection.gross)}
