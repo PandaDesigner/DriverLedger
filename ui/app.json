@@ -3,10 +3,9 @@
     "name": "DriverLedger",
     "slug": "driverledger",
     "version": "0.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "scheme": "driverledger",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
     "splash": {
       "backgroundColor": "#0F172A",
       "resizeMode": "contain"
@@ -25,11 +24,7 @@
       "bundler": "metro",
       "output": "single"
     },
-    "plugins": [
-      "expo-router",
-      "expo-secure-store",
-      "expo-location"
-    ],
+    "plugins": ["expo-router", "expo-secure-store", "expo-location"],
     "experiments": {
       "typedRoutes": true
     }

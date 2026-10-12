@@ -1,119 +1,54 @@
-# DriverLedger — `ui/`
+# DriverLedger UI: fase 3 de demostración
 
-Expo SDK 57+ mobile shell. Implements Fase 0b (`setup-expo-skeleton`).
+Siete vistas y dos modales bajo `app/`; componentes, tokens y estado bajo `src/`. El cambio activo es `add-ui-shell-and-screens`, rama `feature/add-ui-shell-and-screens`.
 
-**Ownership:** Pi (`agent/pi`).
-**Branch of record:** `feature/setup-expo-skeleton`.
-**OpenSpec change:** `openspec/changes/setup-expo-skeleton/`.
+## Límites
 
-## Stack at a glance
+Todos los datos son ficticios. Login, registro, recuperación y selección de plataformas son simulaciones; no crean cuentas, envían correos ni conectan plataformas. Viajes, gastos y preferencias viven únicamente en memoria. Reiniciar la demostración los borra.
 
-- React Native + Expo (SDK 57+), Expo Router (file-system routing)
-- RxJS Observables + `@preact/signals-react`
-- Local persistence: SQLite offline-first via `expo-sqlite`
-- Remote source of truth: `@supabase/supabase-js` (RLS by `driver_id`)
-- Background services: `expo-task-manager` + `expo-location` (GPS only in active rides)
-- Secrets: `expo-secure-store` (never plaintext, never `.env` on the client)
-- Bun as package manager, script runner, and test runner
-- TypeScript strict + ESLint v9 flat config + Prettier
+No introducir credenciales reales. La UI no importa `data/` ni `services/`, no solicita GPS ni escribe en la cola real. La fase 4 se mantiene separada.
 
-See `../docs/RFC-001-arquitectura.md` for the full architecture rationale.
+Las metas, el neto, los descuentos y las carreras faltantes son ejemplos precargados. No hay reglas financieras productivas. Después de mutaciones o filtros sin proyección compatible se informa que no hay proyección disponible.
 
-## Folder layout (current)
+## Recorrido
 
-```
-ui/
-├── App.tsx                 # no-op root kept for tooling compatibility
-├── app/
-│   └── index.tsx           # placeholder route at "/"
-├── index.ts                # imports expo-router/entry
-├── package.json            # workspace manifests + scripts
-├── bunfig.toml             # Bun runtime config (peer=false, coverage thresholds)
-├── tsconfig.json           # TS strict + path alias @/* -> src/*
-├── eslint.config.js        # ESLint v9 flat config (eslint-config-expo)
-├── .prettierrc             # Prettier defaults
-├── .gitignore
-└── app.json                # Expo config
-```
+Desde Login, usar correo/teléfono ficticio y contraseña de prueba de ocho caracteres. Seleccionar al menos una plataforma para abrir Dashboard.
 
-`src/` will be added in Fase 3 when the seven real screens land; the path
-alias `@/* → src/*` is pre-wired in `tsconfig.json` so future imports are
-reviewable rather than `../../../../services/...`.
+La barra tiene Dashboard, Historial, Nuevo viaje, Gastos y Ajustes. Gastos reutiliza Historial con filtro de gastos. Nuevo viaje abre Confirmación; Alta de gasto está disponible en Dashboard e Historial. Los modales requieren acciones explícitas; cerrar Alta de gasto conserva el borrador.
 
-## Prerequisites
+Cada superficie incluye un selector visible de escenarios de demostración. Este selector reproduce estados visuales y no representa operaciones de red. Elegir vacío no borra los registros de sesión. Las preferencias guardadas se conservan durante la sesión, no después de reiniciar.
 
-- Bun ≥ 1.3.12 (`brew install bun`)
-- Node not required at the user level; Bun handles TS transpilation natively
-- iOS Simulator (macOS) and/or Android emulator for `bun ios` / `bun android`
+## Runtime
 
-## Install
+Dependencias alineadas con Expo SDK 57 instalado: React 19.2.3 y React Native 0.86.3. No hay opt-out de arquitectura nativa antigua. Orientation default permite portrait/landscape. Expo UI aporta botones nativos; los controles que necesitan estado seleccionado o etiquetas accesibles usan primitivas React Native del mismo shell.
 
-From the repository root:
+## Comandos
 
-```bash
-bun install            # installs every workspace declared in the root package.json
-```
+Desde la raíz:
 
-Or scoped to this workspace only:
-
-```bash
-bun install --filter ui
-```
-
-This materializes the lockfile (`bun.lockb` or text variant) at the repo
-root. Commit the lockfile alongside any dependency change.
-
-## Common scripts
-
-Run with `bun --filter ui <script>` from the repo root, or `bun <script>` from `ui/`.
-
-| Script           | What it does                                                |
-|------------------|-------------------------------------------------------------|
-| `bun dev`        | Boots Expo Dev Tools (`npx expo start`)                     |
-| `bun ios`        | Boots Dev Tools and opens iOS Simulator                     |
-| `bun android`    | Boots Dev Tools and opens Android emulator                  |
-| `bun web`        | Boots Dev Tools and serves the web bundle                   |
-| `bun tsc`        | Runs `tsc --noEmit` against the strict TS config            |
-| `bun lint`       | Runs ESLint v9 flat config                                  |
-| `bun format`     | Runs Prettier write on the whole tree                      |
-| `bun test`       | Runs the native Bun test runner (no tests yet — Fase 7)     |
-| `bun coverage`   | Runs tests with coverage (threshold declared in `bunfig.toml`) |
-
-## Smoke check (Fase 0b acceptance)
-
-```bash
-cd ui
+```sh
 bun install
-bun tsc --noEmit      # exits 0 with strict + noUncheckedIndexedAccess + exactOptionalPropertyTypes
-bun lint             # exits 0
+bun --filter ui dev
+bun --filter ui tsc
+bun --filter ui lint
+bun test
 ```
 
-Plus a manual `bun dev` to confirm the placeholder route renders at `/`.
+Los tests UI están en `tests/`, no en `ui/`. Para comprobarlos específicamente:
 
-## Cross-domain boundary
+```sh
+bun test tests/unit tests/integration
+cd ui
+node node_modules/typescript/bin/tsc -p ../tests/tsconfig.json --noEmit
+cd ../tests
+node ../node_modules/eslint/bin/eslint.js unit/ui-*.test.ts integration/ui-demo-flows.test.ts
+bun test --coverage
+```
 
-This folder is the exclusive domain of the `Pi` agent. It does not depend
-on `data/` (Supabase tables) or `services/` (sync queue, strategies); both
-are owned by `OpenCode` and live in their own OpenSpec changes
-(`setup-supabase-tables` etc.). Don't add DB calls or platform logic here
-until Fase 1 / Fase 4 land.
+La cobertura de `tests/bunfig.toml` exige 80% de líneas y funciones en los módulos de lógica cargados, excluyendo fixtures y contratos. Bun no acredita aquí cobertura de branches/statements ni renderizado nativo. No confundir estas pruebas con E2E.
 
-## What is NOT in this change
+Los tipos de rutas se generan al arrancar Expo. Si faltan rutas en TypeScript tras añadir archivos, arrancar Expo antes de repetir el chequeo; no desactivar typed routes.
 
-- Any screen beyond the placeholder (Login, Registro, Olvidar contraseña,
-  Onboarding, Dashboard, Historial, Settings) — Fase 3.
-- Modals (ride confirmation, expense entry) — Fase 3.
-- Strategy pattern / `services/` — Fase 4 (OpenCode domain).
-- SQLite schema, repositories, migrations — Fase 1 (OpenCode domain).
-- Supabase schema, RLS, seeds — Fase 0a (parallel change, OpenCode domain).
-- GPS lifecycle — Fase 5.
-- Production builds / app store config — deferred.
+## Aceptación pendiente
 
-## Troubleshooting
-
-- `bun install` fails on peer-dep warnings → expected (`bunfig.toml` has
-  `peer = false`); do NOT re-enable peer resolution globally.
-- `bun tsc` errors on `react-native` types → run `bun install` again, RN
-  bundles its own types in 0.81+.
-- `bun lint` complains about `project` parser option → ensure
-  `tsconfig.json` is in `ui/` and the JSON parses.
+Consultar `../tests/ui/manual-acceptance.md` y el `verify-report.md` del cambio. Empaquetar iOS/Android no prueba su ejecución. No integrar ni archivar hasta completar la revisión nativa y obtener aprobación humana.

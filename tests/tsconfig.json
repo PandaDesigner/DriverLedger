@@ -1,0 +1,17 @@
+{
+  "extends": "../ui/tsconfig.json",
+  "compilerOptions": {
+    "types": ["bun-types", "node"],
+    "typeRoots": ["../services/node_modules", "../node_modules/@types"]
+  },
+  "include": [
+    "unit/ui-*.test.ts",
+    "integration/ui-demo-flows.test.ts",
+    "../ui/src/demo/contracts.ts",
+    "../ui/src/demo/model.ts",
+    "../ui/src/demo/history.ts",
+    "../ui/src/demo/navigation.ts",
+    "../ui/src/demo/fixtures.ts"
+  ],
+  "exclude": ["../node_modules"]
+}

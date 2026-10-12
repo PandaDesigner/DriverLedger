@@ -29,13 +29,6 @@ module.exports = [
     ],
   },
   {
-    languageOptions: {
-      parserOptions: {
-        // Mirror the TS path alias resolution at lint time.
-        project: ['./tsconfig.json'],
-        tsconfigRootConfig: __dirname,
-      },
-    },
     settings: {
       'import/resolver': {
         typescript: {
