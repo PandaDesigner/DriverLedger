@@ -1,0 +1,22 @@
+{
+  "name": "services",
+  "version": "0.0.0",
+  "private": true,
+  "description": "DriverLedger services layer (RxJS bridge, repositories, sync queue, platform strategies).",
+  "type": "module",
+  "scripts": {
+    "test": "bun test",
+    "coverage": "bun test --coverage"
+  },
+  "dependencies": {
+    "rxjs": "^7.8.2"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.0",
+    "bun-types": "^1.3.0"
+  },
+  "packageManager": "bun@1.3.12",
+  "engines": {
+    "bun": ">=1.3.12"
+  }
+}
