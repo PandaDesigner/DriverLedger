@@ -1,0 +1,25 @@
+# ── DriverLedger root — Bun runtime configuration ────────
+# AD-6: peer-dep resolution + forward-looking test coverage thresholds.
+#
+# The `ui/bunfig.toml` keeps its own config (UI tests with Expo peer
+# resolution disabled). This file is the OpenCode side: `data/sqlite/**`,
+# `services/**`, and the Phase 4 strategies module get a single coverage
+# pass from `bun test --coverage` at the repo root.
+
+[install]
+# Workspace peer resolution is disabled because the UI workspace
+# declares conflicting peer ranges (Expo SDK + React Native). The
+# OpenCode side does not need Expo peer deps.
+peer = false
+
+# Speeds up repeated installs when caches already exist locally.
+[install.cache]
+disable = false
+
+# ── Test runner ──────────────────────────────────────────
+# Phase 1 + Phase 2 left the root test config intentionally blank so the
+# PRs stayed focused on OpenCode territory (`data/` + `services/`).
+# Phase 4 PR #1 OI-2 extends the coverage scope to include the new
+# strategies module and the orchestration service.
+[test]
+coverageThreshold = { lines = 80, functions = 80, statements = 80, branches = 80 }
