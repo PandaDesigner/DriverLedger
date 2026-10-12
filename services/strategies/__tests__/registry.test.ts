@@ -3,10 +3,10 @@
  * (AD-3): populated at module load, frozen, throws `UnknownStrategyError`
  * on lookup miss.
  *
- * Phase 4 lands with one entry (UberStrategy at tipo_estrategia='uber_api');
- * the other two seed rows (`didi_manual`, `indrive_form`) land in PR #2
- * tasks 2.2 and 2.3 respectively. The registry permits missing keys — the
- * first PR only registers what it has tested.
+ * PR #1 ships with one entry (UberStrategy at tipo_estrategia='uber_api').
+ * PR #2 Task 2.6 adds the other two seed rows (`didi_manual`,
+ * `indrive_form`) to the registry. This test file is updated alongside
+ * the registry change.
  */
 
 import { describe, expect, it } from 'bun:test';
@@ -17,6 +17,8 @@ import {
   type TipoEstrategia,
 } from '../registry';
 import { UberStrategy } from '../uber.strategy';
+import { DidiStrategy } from '../didi.strategy';
+import { InDriveStrategy } from '../indrive.strategy';
 import { UnknownStrategyError } from '../strategy.types';
 
 describe('STRATEGY_REGISTRY — static boot-time map (AD-3)', () => {
@@ -28,12 +30,12 @@ describe('STRATEGY_REGISTRY — static boot-time map (AD-3)', () => {
     expect(getStrategyByTipo('uber_api')).toBe(UberStrategy);
   });
 
-  it("throws UnknownStrategyError on every other seed key (PR #1 boundary)", () => {
-    // PR #2 registers the missing entries; until then the registry
-    // surfaces the gap defensively. Defensive behavior is documented
-    // in the task body of PR #1 Task 1.2.
-    expect(() => getStrategyByTipo('didi_manual')).toThrow(UnknownStrategyError);
-    expect(() => getStrategyByTipo('indrive_form')).toThrow(UnknownStrategyError);
+  it("resolves 'didi_manual' to the DidiStrategy instance registered at boot (PR #2 Task 2.6)", () => {
+    expect(getStrategyByTipo('didi_manual')).toBe(DidiStrategy);
+  });
+
+  it("resolves 'indrive_form' to the InDriveStrategy instance registered at boot (PR #2 Task 2.6)", () => {
+    expect(getStrategyByTipo('indrive_form')).toBe(InDriveStrategy);
   });
 
   it('throws UnknownStrategyError on any unknown tipo', () => {

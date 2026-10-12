@@ -110,3 +110,35 @@ export class UnknownStrategyError extends Error {
     Object.setPrototypeOf(this, UnknownStrategyError.prototype);
   }
 }
+
+/**
+ * `UnknownPlatformError` — thrown by a strategy's `suggest()` when the
+ * raw text contains a clear marker for a DIFFERENT platform (e.g. the
+ * DiDi parser sees "Uber Driver Trip" with no DiDi marker). The
+ * `expected` and `detected` fields let `CarreraService` route the
+ * user back to M01 with an actionable message ("looks like Uber —
+ * switch the platform?").
+ *
+ * Added in PR #2 Task 2.2 alongside `DidiStrategy`; the same pattern
+ * is reused by `InDriveStrategy` in Task 2.3. `CarreraService` does
+ * NOT catch this — the throw propagates to the UI.
+ *
+ * OI: this is a contract addition parallel to `UnknownStrategyError`.
+ * The cross-agent engram topic `sdd/driverledger/add-platform-strategies/interface`
+ * (#1939) is updated in lockstep by `mem_update` in the commit body.
+ */
+export class UnknownPlatformError extends Error {
+  public readonly expected: string;
+  public readonly detected: string;
+
+  constructor(expected: string, detected: string) {
+    super(
+      `[strategy.platform] expected '${expected}' but raw text matches '${detected}' ` +
+        `(cross-platform guard: user picked the wrong platform in M01?)`,
+    );
+    this.name = 'UnknownPlatformError';
+    this.expected = expected;
+    this.detected = detected;
+    Object.setPrototypeOf(this, UnknownPlatformError.prototype);
+  }
+}
