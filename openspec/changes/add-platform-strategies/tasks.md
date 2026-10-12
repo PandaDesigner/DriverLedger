@@ -358,9 +358,9 @@ Chained PRs recommended: Yes
 
 ### PR #2 — Merge + archive (human gate 2)
 
-- [ ] H.1 PR `feature/add-platform-strategies` (PR #2 only — 6 work-unit commits + verification chore) → `develop` after human gate 2 approval.
-- [ ] H.2 `openspec archive add-platform-strategies` — moves change folder to `openspec/changes/archive/2026-10-11-add-platform-strategies/` and promotes `specs/platform-strategies/spec.md` into `openspec/specs/platform-strategies/spec.md` (9 ADDED requirements; no MODIFIED / REMOVED).
-- [ ] H.3 Delete `feature/add-platform-strategies` local and remote.
+- [x] H.1 PR `feature/add-platform-strategies` (PR #2 only — 6 work-unit commits + verification chore) → `develop` after human gate 2 approval.
+- [x] H.2 `openspec archive add-platform-strategies` — moves change folder to `openspec/changes/archive/2026-10-11-add-platform-strategies/` and promotes `specs/platform-strategies/spec.md` into `openspec/specs/platform-strategies/spec.md` (9 ADDED requirements; no MODIFIED / REMOVED).
+- [x] H.3 Delete `feature/add-platform-strategies` local and remote.
 
 ---
 
@@ -374,22 +374,22 @@ Chained PRs recommended: Yes
 
 ## Success Criteria Checklist
 
-- [ ] All 3 strategy classes exist and resolve from `STRATEGY_REGISTRY` by `plataformas.tipo_estrategia`
-- [ ] `CarreraService.suggestRegistration(driverId, plataformaId, input)` returns a `StrategySuggestion` for each of the 3 seeded platforms
-- [ ] `CarreraService.commitRegistration(driverId, suggestion)` writes one `carreras` row with the right `fuente` + `estado` for each platform (Uber = `'activa'`; DiDi / InDrive = `'completada'`)
-- [ ] Confirming a high-confidence suggestion (`confidence >= 0.3`) produces: (a) one `carreras` row, (b) NO `log_eventos` row, (c) auto-enqueue via `dbChange$` → `services/sync-queue.service.ts:547-549`
-- [ ] Confirming a below-threshold suggestion (`confidence < 0.3`) produces one `log_eventos(tipo='carrera.registered')` row with `metadata.fallback = 'manual-form'`, `metadata.plataforma_id`, `metadata.trip_id`
-- [ ] A repository error during commit produces one `log_eventos(tipo='carrera.registered')` row with `metadata.error = '<message>'` AND re-throws the original exception to the caller (post-audit)
-- [ ] `CarreraService` does NOT import `services/sync-queue.service.ts` (static check passes)
-- [ ] `CarreraService` does NOT import `expo-sqlite` directly (Phase 1 `local-rls-facade` holds)
-- [ ] Adding a 4th platform requires ONLY: `INSERT` into `plataformas` + new OpenSpec change to author a strategy class + new entry in `STRATEGY_REGISTRY`
-- [ ] `services/strategies/strategy.types.ts` is importable from `ui/` via `import type` (cross-domain read-only contract)
-- [ ] Coverage ≥ 80% on `services/strategies/**` + `services/carrera.service.ts` via `bun test --coverage`
-- [ ] `services/README.md` is updated to match actual file names (no more `CarreraService.ts` PascalCase reference; closes `discovery/services-readme-drift` #1934)
-- [ ] `services/strategies/README.md` documents the open-closed extension flow with a Phase 6 stub-replacement example
-- [ ] All 40 spec scenarios pass as `bun test` cases (verified in PR #2 Task 2.6)
-- [ ] `git diff develop --stat` (after both PRs merged) shows zero files under `ui/`, top-level `tests/`, `data/`, `services/db.service.ts`, `services/carrera.repo.ts`, or `services/sync-queue.service.ts`
-- [ ] First commit (`PR #1 Task 1.1`) is `services/strategies/strategy.types.ts` — the cross-domain contract is unblocked for Phase 3 Pi immediately, before any strategy or service lands
+- [x] All 3 strategy classes exist and resolve from `STRATEGY_REGISTRY` by `plataformas.tipo_estrategia`
+- [x] `CarreraService.suggestRegistration(driverId, plataformaId, input)` returns a `StrategySuggestion` for each of the 3 seeded platforms
+- [x] `CarreraService.commitRegistration(driverId, suggestion)` writes one `carreras` row with the right `fuente` + `estado` for each platform (Uber = `'activa'`; DiDi / InDrive = `'completada'`)
+- [x] Confirming a high-confidence suggestion (`confidence >= 0.3`) produces: (a) one `carreras` row, (b) NO `log_eventos` row, (c) auto-enqueue via `dbChange$` → `services/sync-queue.service.ts:547-549`
+- [x] Confirming a below-threshold suggestion (`confidence < 0.3`) produces one `log_eventos(tipo='carrera.registered')` row with `metadata.fallback = 'manual-form'`, `metadata.plataforma_id`, `metadata.trip_id`
+- [x] A repository error during commit produces one `log_eventos(tipo='carrera.registered')` row with `metadata.error = '<message>'` AND re-throws the original exception to the caller (post-audit)
+- [x] `CarreraService` does NOT import `services/sync-queue.service.ts` (static check passes)
+- [x] `CarreraService` does NOT import `expo-sqlite` directly (Phase 1 `local-rls-facade` holds)
+- [x] Adding a 4th platform requires ONLY: `INSERT` into `plataformas` + new OpenSpec change to author a strategy class + new entry in `STRATEGY_REGISTRY`
+- [x] `services/strategies/strategy.types.ts` is importable from `ui/` via `import type` (cross-domain read-only contract)
+- [x] Coverage ≥ 80% on `services/strategies/**` + `services/carrera.service.ts` via `bun test --coverage`
+- [x] `services/README.md` is updated to match actual file names (no more `CarreraService.ts` PascalCase reference; closes `discovery/services-readme-drift` #1934)
+- [x] `services/strategies/README.md` documents the open-closed extension flow with a Phase 6 stub-replacement example
+- [x] All 40 spec scenarios pass as `bun test` cases (verified in PR #2 Task 2.6)
+- [x] `git diff develop --stat` (after both PRs merged) shows zero files under `ui/`, top-level `tests/`, `data/`, `services/db.service.ts`, `services/carrera.repo.ts`, or `services/sync-queue.service.ts`
+- [x] First commit (`PR #1 Task 1.1`) is `services/strategies/strategy.types.ts` — the cross-domain contract is unblocked for Phase 3 Pi immediately, before any strategy or service lands
 
 ## Open Items (forwarded from design §10)
 
