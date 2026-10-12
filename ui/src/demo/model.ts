@@ -11,18 +11,21 @@ export function openWorkspace(state: DemoState): DemoState {
   return { ...state, session: SESSION.WORKSPACE, scenario: SCENARIO.READY };
 }
 export function changeScenario(state: DemoState, scenario: Scenario): DemoState {
-  return { ...state, scenario, activity: scenario === SCENARIO.EMPTY ? [] : state.activity, projectionAvailable: scenario === SCENARIO.EMPTY ? false : state.projectionAvailable };
+  return { ...state, scenario };
 }
 export function updateDraft(state: DemoState, draft: ExpenseDraft): DemoState { return { ...state, draft: { ...draft } }; }
 export function discardDraft(state: DemoState): DemoState { return { ...state, draft: { ...emptyDraft } }; }
 export function addExpense(state: DemoState, expense: ValidExpense): DemoState {
   const activity: Activity = { ...expense, id: `demo-expense-${state.activity.length}`, kind: KIND.EXPENSE, time: '10:30' };
-  return { ...discardDraft(state), activity: [...state.activity, activity], projectionAvailable: false };
+  return { ...discardDraft(state), activity: [...state.activity, activity], projectionAvailable: false, scenario: state.scenario === SCENARIO.OFFLINE || state.scenario === SCENARIO.PENDING ? SCENARIO.PENDING : SCENARIO.SUCCESS };
 }
 export function confirmTrip(state: DemoState, trip: Activity): DemoState {
   if (state.confirmed.includes(trip.id)) { return state; }
-  return { ...state, activity: [...state.activity, { ...trip }], confirmed: [...state.confirmed, trip.id], projectionAvailable: false };
+  return { ...state, activity: [...state.activity, { ...trip }], confirmed: [...state.confirmed, trip.id], projectionAvailable: false, scenario: SCENARIO.SUCCESS };
 }
+export function nextTripId(state: DemoState): string { return `demo-manual-trip-${state.confirmed.length + 1}`; }
+export function visibleActivity(state: DemoState): readonly Activity[] { return state.scenario === SCENARIO.EMPTY ? [] : state.activity; }
+export function savePreferences(state: DemoState, preferences: DemoState['preferences']): DemoState { return { ...state, preferences: { ...preferences }, scenario: state.scenario === SCENARIO.OFFLINE ? SCENARIO.PENDING : SCENARIO.SUCCESS }; }
 export function validDate(date: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) { return false; }
   const timestamp = Date.parse(`${date}T12:00:00Z`);

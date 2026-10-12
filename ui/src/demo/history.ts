@@ -1,4 +1,4 @@
-import { DEMO_DATE, KIND, PLATFORM, RANGE, type Activity, type DemoState, type HistoryFilter, type Validation } from './contracts';
+import { DEMO_DATE, KIND, PLATFORM, RANGE, SCENARIO, type Activity, type DemoState, type HistoryFilter, type Validation } from './contracts';
 export function initialFilter(): HistoryFilter { return { range: RANGE.TODAY, platform: PLATFORM.ALL, kind: KIND.ALL, from: DEMO_DATE, to: DEMO_DATE }; }
 export function parseHistoryKind(kind: unknown): Validation<HistoryFilter['kind']> {
   if (kind === undefined) { return { ok: true, value: KIND.ALL }; }
@@ -13,4 +13,4 @@ export function filterActivity(activity: readonly Activity[], filter: HistoryFil
 export function groupActivity(activity: readonly Activity[]): readonly { date: string; activity: readonly Activity[] }[] {
   return [...new Set(activity.map((entry) => entry.date))].toSorted().reverse().map((date) => ({ date, activity: activity.filter((entry) => entry.date === date) }));
 }
-export function hasProjection(state: DemoState, filter: HistoryFilter): boolean { return state.projectionAvailable && filter.range === RANGE.TODAY && filter.platform === PLATFORM.ALL && filter.kind === KIND.ALL; }
+export function hasProjection(state: DemoState, filter: HistoryFilter): boolean { return state.projectionAvailable && state.scenario !== SCENARIO.EMPTY && filter.range === RANGE.TODAY && filter.platform === PLATFORM.ALL && filter.kind === KIND.ALL; }
