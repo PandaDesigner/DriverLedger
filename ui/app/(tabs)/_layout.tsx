@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { SESSION } from '../../src/demo/contracts';
 import { entryRoute } from '../../src/demo/navigation';
 import { useDemo } from '../../src/demo/demo-provider';
-import { useTokens } from '../../src/components/primitives';
+import { useTokens } from '../../src/components/ui';
 import { BottomBar } from '../../src/components/bottom-bar';
 export default function TabsLayout() {
   const { state } = useDemo();

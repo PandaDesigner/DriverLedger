@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { DemoProvider } from '../src/demo/demo-provider';
-import { useTokens } from '../src/components/primitives';
+import { useTokens } from '../src/components/ui';
 function RootStack() {
   const tokens = useTokens();
   return (

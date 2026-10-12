@@ -1,16 +1,8 @@
 import type { PropsWithChildren } from 'react';
-import { Button, Host } from '@expo/ui';
-import { Text, View, TextInput, useColorScheme, type TextInputProps } from 'react-native';
-import { useDemo } from '../demo/demo-provider';
-import { THEME } from '../demo/contracts';
-import { darkTokens, lightTokens, rhythm } from '../theme/tokens';
-export function useTokens() {
-  const { state } = useDemo();
-  const scheme = useColorScheme();
-  return state.theme === THEME.DARK || (state.theme === THEME.SYSTEM && scheme === THEME.DARK)
-    ? darkTokens
-    : lightTokens;
-}
+import { Text, View, TextInput, type TextInputProps } from 'react-native';
+import { useTokens } from './host';
+import { rhythm } from '../../theme/tokens';
+
 export function Copy({ children, large = false }: PropsWithChildren<{ large?: boolean }>) {
   const tokens = useTokens();
   return (
@@ -28,6 +20,7 @@ export function Copy({ children, large = false }: PropsWithChildren<{ large?: bo
     </Text>
   );
 }
+
 export function Card({ children }: PropsWithChildren) {
   const tokens = useTokens();
   return (
@@ -45,34 +38,7 @@ export function Card({ children }: PropsWithChildren) {
     </View>
   );
 }
-export function Action({
-  title,
-  onPress,
-  disabled = false,
-  secondary = false,
-}: {
-  title: string;
-  onPress: () => void;
-  disabled?: boolean;
-  secondary?: boolean;
-}) {
-  const tokens = useTokens();
-  return (
-    <Host
-      matchContents={{ vertical: true }}
-      colorScheme={tokens === darkTokens ? THEME.DARK : THEME.LIGHT}
-      style={{ minHeight: rhythm.target }}
-    >
-      <Button
-        label={title}
-        onPress={onPress}
-        disabled={disabled}
-        variant={secondary ? 'outlined' : 'filled'}
-        style={{ height: rhythm.target, paddingHorizontal: rhythm.section, borderRadius: 12 }}
-      />
-    </Host>
-  );
-}
+
 export function Field({ label, ...props }: TextInputProps & { label: string }) {
   const tokens = useTokens();
   return (
@@ -96,6 +62,7 @@ export function Field({ label, ...props }: TextInputProps & { label: string }) {
     </View>
   );
 }
+
 export function Message({ children }: PropsWithChildren) {
   const tokens = useTokens();
   return (
@@ -108,11 +75,4 @@ export function Message({ children }: PropsWithChildren) {
       {children}
     </Text>
   );
-}
-export function money(amount: number) {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency',
-    currency: 'COP',
-    maximumFractionDigits: 0,
-  }).format(amount);
 }

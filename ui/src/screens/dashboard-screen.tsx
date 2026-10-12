@@ -6,7 +6,8 @@ import { visibleActivity } from '../demo/model';
 import { projection, weekProjection } from '../demo/fixtures';
 import { filterActivity, initialFilter } from '../demo/history';
 import { DemoScreen } from '../components/demo-screen';
-import { Action, Card, Copy, money, useTokens } from '../components/primitives';
+import { Action, Card, Copy, useTokens } from '../components/ui';
+import { money } from '../formatters/money';
 export function DashboardScreen() {
   const { state } = useDemo();
   const tokens = useTokens();

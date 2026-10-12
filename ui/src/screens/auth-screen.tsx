@@ -5,7 +5,7 @@ import { ROUTE, SCENARIO } from '../demo/contracts';
 import { useDemo } from '../demo/demo-provider';
 import { enterDemo, validateIdentity } from '../demo/model';
 import { DemoScreen } from '../components/demo-screen';
-import { Action, Card, Copy, Field, Message } from '../components/primitives';
+import { Action, Card, Copy, Field, Message } from '../components/ui';
 export const AUTH = { LOGIN: 'login', REGISTER: 'register', RECOVERY: 'recovery' } as const;
 type AuthMode = (typeof AUTH)[keyof typeof AUTH];
 export function AuthScreen({ mode }: { mode: AuthMode }) {

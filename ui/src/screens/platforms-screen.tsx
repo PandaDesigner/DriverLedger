@@ -3,7 +3,7 @@ import { PLATFORM, ROUTE, SCENARIO } from '../demo/contracts';
 import { useDemo } from '../demo/demo-provider';
 import { openWorkspace, selectPlatforms } from '../demo/model';
 import { DemoScreen } from '../components/demo-screen';
-import { Action, Card, Copy } from '../components/primitives';
+import { Action, Card, Copy } from '../components/ui';
 export function PlatformsScreen() {
   const { state, update } = useDemo();
   const platforms = [PLATFORM.UBER, PLATFORM.DIDI, PLATFORM.INDRIVE];

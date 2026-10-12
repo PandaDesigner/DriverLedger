@@ -14,7 +14,8 @@ import {
 import { validDate, visibleActivity } from '../demo/model';
 import { projection } from '../demo/fixtures';
 import { DemoBanner, ScenarioControls, StatusPanel } from '../components/demo-screen';
-import { Action, Card, Copy, Field, Message, money, useTokens } from '../components/primitives';
+import { Action, Card, Copy, Field, Message, useTokens } from '../components/ui';
+import { money } from '../formatters/money';
 export function HistoryScreen() {
   const { kind } = useLocalSearchParams();
   const parsed = parseHistoryKind(kind);

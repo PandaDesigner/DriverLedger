@@ -4,7 +4,7 @@ import { CATEGORY, ROUTE, SCENARIO } from '../demo/contracts';
 import { useDemo } from '../demo/demo-provider';
 import { addExpense, discardDraft, updateDraft, validateExpense } from '../demo/model';
 import { DemoScreen } from '../components/demo-screen';
-import { Action, Card, Copy, Field, Message } from '../components/primitives';
+import { Action, Card, Copy, Field, Message } from '../components/ui';
 export function ExpenseModal() {
   const { state, update } = useDemo();
   const [feedback, setFeedback] = useState('');

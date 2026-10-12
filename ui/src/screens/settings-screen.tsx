@@ -5,7 +5,7 @@ import { ROUTE, SCENARIO, THEME } from '../demo/contracts';
 import { useDemo } from '../demo/demo-provider';
 import { savePreferences } from '../demo/model';
 import { DemoScreen } from '../components/demo-screen';
-import { Action, Card, Copy, Field, Message } from '../components/primitives';
+import { Action, Card, Copy, Field, Message } from '../components/ui';
 export function SettingsScreen() {
   const { state, update, reset } = useDemo();
   const [target, setTarget] = useState(state.preferences.target);
