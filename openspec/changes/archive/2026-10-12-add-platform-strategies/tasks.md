@@ -82,7 +82,7 @@ Chained PRs recommended: Yes
     - `draft.metadata = { phase4_stub: true, awaiting_phase6: 'api', platform_session_id: 'phase4-stub-pending-phase6' }` (per OI-4 — test asserts the `platform_session_id` marker)
   - [x] `editableFields` covers every `CarreraPayload` key the driver must fill manually: `plataforma_id`, `tarifa_bruta`, `comision`, `origen`, `destino`, `distancia_km`, `duracion_min`, `gasolina`, `fecha`
   - [x] `suggest` is **pure**: no I/O, no `getDb()`, no `Date.now()`, no `Math.random()`. Test calls `suggest` twice with the same input and asserts deterministic shape equality; a separate test asserts no `console.warn`/`console.error` is emitted on any path (use a stubbed `console.warn`).
-  - [x] `parse.ts` exports a `normalize(raw: string): string` helper (trim → strip non-printable → collapse internal whitespace). Tests cover leading/trailing whitespace, zero-width chars (`​`), multi-line paste with embedded `\n`.
+  - [x] `parse.ts` exports a `normalize(raw: string): string` helper (trim → strip non-printable → collapse internal whitespace). Tests cover leading/trailing whitespace, zero-width chars (``), multi-line paste with embedded `\n`.
   - [x] `UberStrategy.suggest` calls `parse.normalize(input.raw)` before constructing the stub draft.
   - [x] `parse.ts` is pure — no I/O, no `Date.now()`.
   - [x] Both test files written **first**, RED, then implementation lands GREEN.
@@ -175,17 +175,17 @@ Chained PRs recommended: Yes
 
 ### PR #1 — Verification (must pass before merge)
 
-- [ ] V.1 `bun test services/strategies/__tests__/ services/__tests__/carrera.service.test.ts` exits 0 — all suites pass.
-- [ ] V.2 `bun test --coverage` exits 0 with ≥ 80% on `services/strategies/**` + `services/carrera.service.ts`.
-- [ ] V.3 `git diff develop --stat` shows no files under `ui/`, top-level `tests/`, `data/`, `services/db.service.ts`, `services/carrera.repo.ts`, or `services/sync-queue.service.ts` (cross-domain rule + Phase 1/2 freeze).
-- [ ] V.4 Engram topic `sdd/driverledger/add-platform-strategies/interface` (#1939) is updated to reflect the OI-1 amendment (`plataforma: PlataformaRow` field on `StrategySuggestInput`). Run `mem_update` with the merged content after PR #1 lands. No AI attribution in the topic; technical artifact only.
-- [ ] V.5 Conventional commits only — no `Co-Authored-By` trailers.
-- [ ] V.6 After merge, Phase 3 Pi can `import type { StrategySuggestion, PlatformStrategy, StrategySuggestInput, StrategyContext } from 'services/strategies'` without runtime dependency and `mem_get_observation` the engram topic for the contract.
+- [x] V.1 `bun test services/strategies/__tests__/ services/__tests__/carrera.service.test.ts` exits 0 — all suites pass.
+- [x] V.2 `bun test --coverage` exits 0 with ≥ 80% on `services/strategies/**` + `services/carrera.service.ts`.
+- [x] V.3 `git diff develop --stat` shows no files under `ui/`, top-level `tests/`, `data/`, `services/db.service.ts`, `services/carrera.repo.ts`, or `services/sync-queue.service.ts` (cross-domain rule + Phase 1/2 freeze).
+- [x] V.4 Engram topic `sdd/driverledger/add-platform-strategies/interface` (#1939) is updated to reflect the OI-1 amendment (`plataforma: PlataformaRow` field on `StrategySuggestInput`). Run `mem_update` with the merged content after PR #1 lands. No AI attribution in the topic; technical artifact only.
+- [x] V.5 Conventional commits only — no `Co-Authored-By` trailers.
+- [x] V.6 After merge, Phase 3 Pi can `import type { StrategySuggestion, PlatformStrategy, StrategySuggestInput, StrategyContext } from 'services/strategies'` without runtime dependency and `mem_get_observation` the engram topic for the contract.
 
 ### PR #1 — Merge + archive (human gate 2)
 
-- [ ] H.1 PR `feature/add-platform-strategies` (PR #1 only — squash or rebase-merge with the 7 work-unit commits + the verification chore) → `develop` after human gate 2 approval.
-- [ ] H.2 **Do NOT run `openspec archive` yet** — the change stays open while PR #2 is in flight (the spec is published with PR #1's merge, the change folder stays open until both PRs land).
+- [x] H.1 PR `feature/add-platform-strategies` (PR #1 only — squash or rebase-merge with the 7 work-unit commits + the verification chore) → `develop` after human gate 2 approval.
+- [x] H.2 **Do NOT run `openspec archive` yet** — the change stays open while PR #2 is in flight (the spec is published with PR #1's merge, the change folder stays open until both PRs land).
 
 ---
 
@@ -202,11 +202,11 @@ Chained PRs recommended: Yes
 - **Test command**: `bun test services/strategies/__tests__/fees.test.ts`
 - **Depends on**: Phase 1 `data/sqlite/types.ts` (`PlataformaRow`, type-only import) + `data/migrations/0003_seeds.sql:22-34` (the per-platform `comision` values: Uber 25.00, DiDi 20.00, InDrive 18.00)
 - **Acceptance criteria**:
-  - [ ] `calcularComision(tarifaBruta: number, plataforma: PlataformaRow): number` returns `tarifaBruta * plataforma.comision / 100` exactly. Test asserts the formula for each seeded platform with concrete numbers (`Uber: 12500 * 0.25 = 3125.00`, `DiDi: 12500 * 0.20 = 2500.00`, `InDrive: 8000 * 0.18 = 1440.00`).
-  - [ ] `calcularGasolina(distanciaKm: number, plataforma: PlataformaRow): number` returns `0` for Phase 4 (placeholder per OI-3 / AD-9 + R-2). Test asserts `calcularGasolina(4.2, ...) === 0` for all three seeded platforms.
-  - [ ] Both helpers are **pure**: no I/O, no `Date.now()`, no `Math.random()`, no `console.warn`. Tests call each helper twice with the same args and assert identical return values.
-  - [ ] No `import` of `ui/*`, `top-level tests/*`, `services/sync-queue.service.ts`, `services/db.service.ts`, `services/carrera.repo.ts` (strategy purity invariant)
-  - [ ] Test file written **first**, RED, then the implementation lands GREEN.
+  - [x] `calcularComision(tarifaBruta: number, plataforma: PlataformaRow): number` returns `tarifaBruta * plataforma.comision / 100` exactly. Test asserts the formula for each seeded platform with concrete numbers (`Uber: 12500 * 0.25 = 3125.00`, `DiDi: 12500 * 0.20 = 2500.00`, `InDrive: 8000 * 0.18 = 1440.00`).
+  - [x] `calcularGasolina(distanciaKm: number, plataforma: PlataformaRow): number` returns `distanciaKm * CONSUMO_DEFAULT` where `CONSUMO_DEFAULT = 0.08` (per launch prompt; documented deviation from design spec's `0` placeholder). Test asserts `calcularGasolina(10, ...) === 0.8` for all three seeded platforms.
+  - [x] Both helpers are **pure**: no I/O, no `Date.now()`, no `Math.random()`, no `console.warn`. Tests call each helper twice with the same args and assert identical return values.
+  - [x] No `import` of `ui/*`, `top-level tests/*`, `services/sync-queue.service.ts`, `services/db.service.ts`, `services/carrera.repo.ts` (strategy purity invariant)
+  - [x] Test file written **first**, RED, then the implementation lands GREEN.
 - **Spec requirements covered**: none directly (internal infrastructure)
 - **Design ADs referenced**: AD-9
 - **Rollback**: `git revert <commit>` — helpers only; downstream strategy tests would fail at compile, signalling the rollback to the next contributor
@@ -218,9 +218,9 @@ Chained PRs recommended: Yes
 - **Test command**: `bun test services/strategies/__tests__/didi.strategy.test.ts`
 - **Depends on**: 2.1 (fees), 1.2 (registry), 1.3 (parse.ts + confidence + CarreraPayload type)
 - **Acceptance criteria**:
-  - [ ] `DidiStrategy.tipo === 'didi_manual'`
-  - [ ] `DidiStrategy.oneTapCapable === false` in Phase 4
-  - [ ] **Happy path** — paste `"DiDi Tarifa: $12.500 COP\nOrigen: Calle 10\nDestino: Centro\nDistancia: 4,2 km"` yields:
+  - [x] `DidiStrategy.tipo === 'didi_manual'`
+  - [x] `DidiStrategy.oneTapCapable === false` in Phase 4
+  - [x] **Happy path** — paste `"DiDi Tarifa: $12.500 COP\nOrigen: Calle 10\nDestino: Centro\nDistancia: 4,2 km"` yields:
     - `confidence >= 0.7`
     - `draft.tarifa_bruta === 12500` (commas + currency markers stripped)
     - `draft.origen === 'Calle 10'`, `draft.destino === 'Centro'`
@@ -229,14 +229,14 @@ Chained PRs recommended: Yes
     - `draft.estado === 'completada'`
     - `draft.fuente === 'manual'`
     - `draft.metadata = { parser: 'didi_strategy_v1' }` (forward-compat for Phase 6 if DiDi adds anything)
-  - [ ] **Below-threshold** — paste contains no `Tarifa`, no `$`, no numeric currency → `confidence < 0.3`, `editableFields` covers `tarifa_bruta | comision | origen | destino | distancia_km | duracion_min | gasolina | fecha`
-  - [ ] **Empty paste** — `raw === ''` or `raw.trim() === ''` → `confidence === 0`, `draft.tarifa_bruta === 0` (NOT `NaN`)
-  - [ ] **Cross-platform** — paste contains a recognizable `Uber` brand marker (e.g. `"Uber Driver Trip"`) but no `DiDi` marker → throws `UnknownPlatformError` (extends `Error`); the test asserts `await expect(strategy.suggest({ raw, context: {} })).rejects.toThrow(UnknownPlatformError)`
-  - [ ] **Per-platform estado** — every DiDi suggestion has `draft.estado === 'completada'` (AD-7)
-  - [ ] **Per-platform fuente** — every DiDi suggestion has `draft.fuente === 'manual'` (AD-7, spec scenario `carrera-estado-lifecycle §fuente per platform in Phase 4`)
-  - [ ] **No I/O** — strategy is pure (test asserts no DB calls; uses in-memory assertion)
-  - [ ] `registry.ts` updated to register `didi_manual: new DidiStrategy()`; `didi.strategy.ts` is the only file added in this commit outside tests + the registry modification
-  - [ ] Test file written **first**, RED, then the implementation lands GREEN.
+  - [x] **Below-threshold** — paste contains no `Tarifa`, no `$`, no numeric currency → `confidence < 0.3`, `editableFields` covers `tarifa_bruta | comision | origen | destino | distancia_km | duracion_min | gasolina | fecha`
+  - [x] **Empty paste** — `raw === ''` or `raw.trim() === ''` → `confidence === 0`, `draft.tarifa_bruta === 0` (NOT `NaN`)
+  - [x] **Cross-platform** — paste contains a recognizable `Uber` brand marker (e.g. `"Uber Driver Trip"`) but no `DiDi` marker → throws `UnknownPlatformError` (extends `Error`); the test asserts `await expect(strategy.suggest({ raw, context: {} })).rejects.toThrow(UnknownPlatformError)`
+  - [x] **Per-platform estado** — every DiDi suggestion has `draft.estado === 'completada'` (AD-7)
+  - [x] **Per-platform fuente** — every DiDi suggestion has `draft.fuente === 'manual'` (AD-7, spec scenario `carrera-estado-lifecycle §fuente per platform in Phase 4`)
+  - [x] **No I/O** — strategy is pure (test asserts no DB calls; uses in-memory assertion)
+  - [x] `registry.ts` updated to register `didi_manual: new DidiStrategy()`; `didi.strategy.ts` is the only file added in this commit outside tests + the registry modification
+  - [x] Test file written **first**, RED, then the implementation lands GREEN.
 - **Spec requirements covered**: `platform-strategy-didi-paste` (all 5 scenarios) + `carrera-estado-lifecycle` (`DiDi confirmation lands as completada` scenario)
 - **Design ADs referenced**: AD-1, AD-7, AD-11, AD-12
 - **Rollback**: `git revert <commit>` — `didi_manual` is not registered after revert; registry lookup throws `UnknownStrategyError` for DiDi (defensible runtime behaviour)
@@ -248,9 +248,9 @@ Chained PRs recommended: Yes
 - **Test command**: `bun test services/strategies/__tests__/indrive.strategy.test.ts`
 - **Depends on**: 2.1 (fees), 2.2 (`didi.strategy.ts` precedent + the now-shared fees signatures + the registry pattern), 1.3 (parse.ts + CarreraPayload type)
 - **Acceptance criteria**:
-  - [ ] `InDriveStrategy.tipo === 'indrive_form'`
-  - [ ] `InDriveStrategy.oneTapCapable === false` in Phase 4
-  - [ ] **Happy path** — paste `"InDrive Precio acordado: 8.000 COP\nCalle 50 → Poblado"` (no distance line) yields:
+  - [x] `InDriveStrategy.tipo === 'indrive_form'`
+  - [x] `InDriveStrategy.oneTapCapable === false` in Phase 4
+  - [x] **Happy path** — paste `"InDrive Precio acordado: 8.000 COP\nCalle 50 → Poblado"` (no distance line) yields:
     - `confidence >= 0.7`
     - `draft.tarifa_bruta === 8000` (parsed from the `acordado` keyword, NOT the `Tarifa` keyword)
     - `draft.origen === 'Calle 50'`, `draft.destino === 'Poblado'`
@@ -259,14 +259,14 @@ Chained PRs recommended: Yes
     - `draft.estado === 'completada'`
     - `draft.fuente === 'manual'`
     - `draft.metadata = { parser: 'indrive_strategy_v1' }`
-  - [ ] **Below-threshold** — paste contains no `acordado` keyword AND no numeric fare → `confidence < 0.3`, `editableFields` covers the required fields
-  - [ ] **editableFields excludes null fields** — when `origen` is unparsed (`null`), `editableFields` does NOT include `'origen'`; the rule applies symmetrically to `destino`, `distancia_km`, `duracion_min`, `gasolina`. Test asserts `editableFields.includes('tarifa_bruta') === true` AND `editableFields.includes('origen') === false` for this case.
-  - [ ] **Cross-platform** — paste contains `Uber` or `DiDi` brand markers but no `InDrive` marker → throws `UnknownPlatformError`
-  - [ ] **Per-platform estado** — every InDrive suggestion has `draft.estado === 'completada'`
-  - [ ] **Per-platform fuente** — every InDrive suggestion has `draft.fuente === 'manual'`
-  - [ ] **No I/O** — strategy is pure
-  - [ ] `registry.ts` updated to register `indrive_form: new InDriveStrategy()`
-  - [ ] Test file written **first**, RED, then the implementation lands GREEN.
+  - [x] **Below-threshold** — paste contains no `acordado` keyword AND no numeric fare → `confidence < 0.3`, `editableFields` covers the required fields
+  - [x] **editableFields excludes null fields** — when `origen` is unparsed (`null`), `editableFields` does NOT include `'origen'`; the rule applies symmetrically to `destino`, `distancia_km`, `duracion_min`, `gasolina`. Test asserts `editableFields.includes('tarifa_bruta') === true` AND `editableFields.includes('origen') === false` for this case.
+  - [x] **Cross-platform** — paste contains `Uber` or `DiDi` brand markers but no `InDrive` marker → throws `UnknownPlatformError`
+  - [x] **Per-platform estado** — every InDrive suggestion has `draft.estado === 'completada'`
+  - [x] **Per-platform fuente** — every InDrive suggestion has `draft.fuente === 'manual'`
+  - [x] **No I/O** — strategy is pure
+  - [x] `registry.ts` updated to register `indrive_form: new InDriveStrategy()`
+  - [x] Test file written **first**, RED, then the implementation lands GREEN.
 - **Spec requirements covered**: `platform-strategy-indrive-paste` (all 5 scenarios) + `carrera-estado-lifecycle` (`InDrive confirmation lands as completada` scenario)
 - **Design ADs referenced**: AD-1, AD-7, AD-11, AD-12
 - **Rollback**: `git revert <commit>` — `indrive_form` not registered after revert; registry lookup throws `UnknownStrategyError` for InDrive
@@ -278,13 +278,13 @@ Chained PRs recommended: Yes
 - **Test command**: `bun test services/__tests__/carrera.service.test.ts`
 - **Depends on**: 2.2, 2.3 (all 3 strategies registered), 1.4 (skeleton), Phase 1 `services/carrera.repo.ts:66-139` (`upsertByTripId`), Phase 1 `services/db.service.ts` (`getBridge`, `getDb`, the `LocalDatabase` interface for the audit row INSERT).
 - **Acceptance criteria**:
-  - [ ] `commitRegistration(driverId: string, suggestion: StrategySuggestion, tripId?: string): Promise<CarreraRow>`:
+  - [x] `commitRegistration(driverId: string, suggestion: StrategySuggestion, tripId?: string): Promise<CarreraRow>`:
     - generates `tripId = crypto.randomUUID()` if not supplied (idempotent per Phase 1's `UNIQUE(driver_id, trip_id)` constraint)
     - calls `carreraRepo.upsertByTripId(driverId, generatedTripId, suggestion.draft)` exactly once
     - **does NOT import `services/sync-queue.service.ts`** (cross-domain, R-8, AD-10) — the auto-enqueue funnel at `services/sync-queue.service.ts:547-549` catches the row structurally via `dbChange$`
     - **does NOT import `expo-sqlite`** directly (Phase 1 `local-rls-facade`)
-  - [ ] **Happy path** (suggestion.confidence >= 0.3 AND repo resolves) — NO `log_eventos` row is inserted by `commitRegistration`. Test asserts `SELECT COUNT(*) FROM log_eventos WHERE tipo = 'carrera.registered'` equals the pre-confirm count.
-  - [ ] **Below-threshold path** (suggestion.confidence < 0.3) — ONE `log_eventos` row is inserted with:
+  - [x] **Happy path** (suggestion.confidence >= 0.3 AND repo resolves) — NO `log_eventos` row is inserted by `commitRegistration`. Test asserts `SELECT COUNT(*) FROM log_eventos WHERE tipo = 'carrera.registered'` equals the pre-confirm count.
+  - [x] **Below-threshold path** (suggestion.confidence < 0.3) — ONE `log_eventos` row is inserted with:
     - `tipo = 'carrera.registered'`
     - `metadata.fallback = 'manual-form'`
     - `metadata.plataforma_id = <the plataformaId>`
@@ -292,11 +292,11 @@ Chained PRs recommended: Yes
     - the `metadata` column round-trips through `JSON.parse(JSON.stringify(metadata))` (valid JSON)
     - INSERT goes through `getDb()` (Phase 1 facade, NOT raw `expo-sqlite`)
     - Test asserts `SELECT COUNT(*) FROM log_eventos WHERE tipo = 'carrera.registered'` increases by exactly 1.
-  - [ ] **Repo error path** (`carreraRepo.upsertByTripId` throws) — ONE `log_eventos` row is inserted with `tipo = 'carrera.registered'`, `metadata.error = '<message>'`, `metadata.plataforma_id`, `metadata.trip_id`. The original exception propagates AFTER the audit row is committed. Test asserts `await expect(...).rejects.toThrow(...)` AND the audit row count increase.
-  - [ ] **Audit row taxonomy** — `tipo` is the literal string `'carrera.registered'` (dot-namespaced, matches W-LOG-CONFLICT precedent at `services/sync-queue.service.ts:481-489`); `driver_id` column equals the `driverId` argument.
-  - [ ] `services/strategies/ui-labels.ts` exports `PLATFORM_UI_LABELS: Readonly<Record<string, string>>` (e.g. `uber_api: 'Modo API'`, `didi_manual: 'Modo manual (captura)'`, `indrive_form: 'Modo formulario'`). Phase 3 Pi imports this value-level from `services/strategies/ui-labels`. This is the **one** value-level cross-domain import from `services/` to `ui/` (OI-5, accepted exception per the design).
-  - [ ] The `CarreraService` class is unchanged in shape — same constructor signature, same `listPlataformas` / `getStrategyByTipo` / `suggestRegistration` / `commitRegistration` surface. Tests already in PR #1 Task 1.4 still pass.
-  - [ ] Update `services/__tests__/carrera.service.test.ts` with 5 scenarios: (a) happy path no audit; (b) below-threshold audit; (c) repo error audit + throw; (d) audit-row taxonomy metadata shape; (e) static check that `carrera.service.ts` does NOT import `services/sync-queue.service.ts` (regex on the file contents from a Bun test).
+  - [x] **Repo error path** (`carreraRepo.upsertByTripId` throws) — ONE `log_eventos` row is inserted with `tipo = 'carrera.registered'`, `metadata.error = '<message>'`, `metadata.plataforma_id`, `metadata.trip_id`. The original exception propagates AFTER the audit row is committed. Test asserts `await expect(...).rejects.toThrow(...)` AND the audit row count increase.
+  - [x] **Audit row taxonomy** — `tipo` is the literal string `'carrera.registered'` (dot-namespaced, matches W-LOG-CONFLICT precedent at `services/sync-queue.service.ts:481-489`); `driver_id` column equals the `driverId` argument.
+  - [x] `services/strategies/ui-labels.ts` exports `PLATFORM_UI_LABELS: Readonly<Record<string, string>>` (e.g. `uber_api: 'Modo API'`, `didi_manual: 'Modo manual (captura)'`, `indrive_form: 'Modo formulario'`). Phase 3 Pi imports this value-level from `services/strategies/ui-labels`. This is the **one** value-level cross-domain import from `services/` to `ui/` (OI-5, accepted exception per the design).
+  - [x] The `CarreraService` class is unchanged in shape — same constructor signature, same `listPlataformas` / `getStrategyByTipo` / `suggestRegistration` / `commitRegistration` surface. Tests already in PR #1 Task 1.4 still pass.
+  - [x] Update `services/__tests__/carrera.service.test.ts` with 5 scenarios: (a) happy path no audit; (b) below-threshold audit; (c) repo error audit + throw; (d) audit-row taxonomy metadata shape; (e) static check that `carrera.service.ts` does NOT import `services/sync-queue.service.ts` (regex on the file contents from a Bun test).
 - **Spec requirements covered**: `carrera-service-orchestration` (5 of 6 scenarios now fully land), `platform-strategy-audit-log` (all 4 scenarios)
 - **Design ADs referenced**: AD-4, AD-5, AD-10, AD-14, OI-5
 - **Rollback**: `git revert <commit>` — `CarreraService` becomes a no-write shell; `ui/` cannot drive commits until the reverted version re-lands or a hotfix restores `commitRegistration`
@@ -308,7 +308,7 @@ Chained PRs recommended: Yes
 - **Test command**: `bun test services/__tests__/carrera.service.test.ts`
 - **Depends on**: 2.4 (full `commitRegistration` surface)
 - **Acceptance criteria**:
-  - [ ] Test scenario `Uber end-to-end happy path`:
+  - [x] Test scenario `Uber end-to-end happy path`:
     - seed 3 `plataformas` rows from `0003_seeds.sql:24-34` into the in-memory SQLite
     - `service.suggestRegistration(driverId, uberPlataformaId, { raw: '', context: {} })` returns a stub suggestion (`fuente: 'manual'`, `estado: 'activa'`, `confidence: 0`)
     - driver mutates the suggestion fields (mimics the M01 modal), then calls `service.commitRegistration(driverId, suggestion)`
@@ -316,19 +316,19 @@ Chained PRs recommended: Yes
     - assert: `SELECT COUNT(*) FROM log_eventos WHERE tipo = 'carrera.registered'` equals 0 (happy path)
     - assert: `dbChange$` emitted exactly once with `table === 'carreras'`
     - assert: `sync-queue.service.ts:547-549` auto-enqueue picked up the row (the Phase 2 subscription observes the `dbChange$` event; verify via `syncQueue$` snapshot)
-  - [ ] Test scenario `DiDi end-to-end happy path`:
+  - [x] Test scenario `DiDi end-to-end happy path`:
     - same setup, paste `"DiDi Tarifa: $12.500 COP\nOrigen: Calle 10\nDestino: Centro\nDistancia: 4,2 km"`
     - assert one `carreras` row, `tarifa_bruta === 12500`, `comision === 2500.00`, `estado === 'completada'`, `fuente === 'manual'`
     - assert zero `carrera.registered` audit rows
     - assert auto-enqueue
-  - [ ] Test scenario `InDrive end-to-end happy path`:
+  - [x] Test scenario `InDrive end-to-end happy path`:
     - same setup, paste `"InDrive Precio acordado: 8.000 COP\nCalle 50 → Poblado"`
     - assert one `carreras` row, `tarifa_bruta === 8000`, `comision === 1440.00`, `estado === 'completada'`, `fuente === 'manual'`
     - assert `distancia_km` is `NULL`
     - assert zero `carrera.registered` audit rows
     - assert auto-enqueue
-  - [ ] In-memory SQLite factory mirrors `services/__tests__/sync-queue.service.test.ts:56-85` precedent; pre-seeds the 3 `plataformas` rows manually
-  - [ ] All 3 scenarios written FIRST as failing tests, then task 2.4 + task 2.5 build them GREEN
+  - [x] In-memory SQLite factory mirrors `services/__tests__/sync-queue.service.test.ts:56-85` precedent; pre-seeds the 3 `plataformas` rows manually
+  - [x] All 3 scenarios written FIRST as failing tests, then task 2.4 + task 2.5 build them GREEN
 - **Spec requirements covered**: `carrera-estado-lifecycle` (all 5 scenarios — every platform), `carrera-service-orchestration` (audit scenarios now covered end-to-end)
 - **Design ADs referenced**: AD-4, AD-5, AD-7
 - **Rollback**: `git revert <commit>` — tests only; no production behavior change
@@ -340,17 +340,17 @@ Chained PRs recommended: Yes
 - **Test command**: `bun test --coverage` from repo root (Phase 2 G.3 precedent)
 - **Depends on**: all prior tasks in PR #2
 - **Acceptance criteria**:
-  - [ ] `bun test --coverage` exits 0 with ≥ 80% lines/functions/statements/branches on:
+  - [x] `bun test --coverage` exits 0 with ≥ 80% lines/functions/statements/branches on:
     - `services/strategies/**` (all 6 source files + their tests)
     - `services/carrera.service.ts`
-  - [ ] No `any` types in `services/strategies/**` or `services/carrera.service.ts` (or justified `any` per `unknown` with a comment; documented by code review)
-  - [ ] No unused imports (ESLint clean; `bun run lint` exits 0 if a lint script exists, otherwise manual review notes in the commit body)
-  - [ ] `git diff develop --stat` cross-domain audit:
+  - [x] No `any` types in `services/strategies/**` or `services/carrera.service.ts` (or justified `any` per `unknown` with a comment; documented by code review)
+  - [x] No unused imports (ESLint clean; `bun run lint` exits 0 if a lint script exists, otherwise manual review notes in the commit body)
+  - [x] `git diff develop --stat` cross-domain audit:
     - NO files under `ui/`
     - NO files under top-level `tests/`
     - NO files under `data/`
     - NO modifications to `services/db.service.ts`, `services/carrera.repo.ts`, `services/sync-queue.service.ts`, `services/sync-queue.transport.ts`, `services/network.service.ts` (Phase 1 + Phase 2 frozen)
-  - [ ] All 40 spec scenarios from `openspec/changes/add-platform-strategies/specs/platform-strategies/spec.md` pass as `bun test` cases (verified via grep + test name; coverage gate inherits)
+  - [x] All 40 spec scenarios from `openspec/changes/add-platform-strategies/specs/platform-strategies/spec.md` pass as `bun test` cases (verified via grep + test name; coverage gate inherits)
 - **Spec requirements covered**: `local-test-coverage` (Phase 1 inherited floor, applied to the new files)
 - **Design ADs referenced**: AD-9, AD-10
 - **Rollback**: n/a (verification only)
@@ -359,7 +359,7 @@ Chained PRs recommended: Yes
 ### PR #2 — Merge + archive (human gate 2)
 
 - [x] H.1 PR `feature/add-platform-strategies` (PR #2 only — 6 work-unit commits + verification chore) → `develop` after human gate 2 approval.
-- [x] H.2 `openspec archive add-platform-strategies` — moves change folder to `openspec/changes/archive/2026-10-11-add-platform-strategies/` and promotes `specs/platform-strategies/spec.md` into `openspec/specs/platform-strategies/spec.md` (9 ADDED requirements; no MODIFIED / REMOVED).
+- [x] H.2 `openspec archive add-platform-strategies` — moves change folder to `openspec/changes/archive/2026-10-12-add-platform-strategies/` and promotes `specs/platform-strategies/spec.md` into `openspec/specs/platform-strategies/spec.md` (9 ADDED requirements; no MODIFIED / REMOVED).
 - [x] H.3 Delete `feature/add-platform-strategies` local and remote.
 
 ---

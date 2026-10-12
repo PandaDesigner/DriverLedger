@@ -264,7 +264,7 @@ The confidence threshold for fallback to the manual form is `0.3`, codified as a
 - **WHEN** any DiDi `StrategySuggestion` is returned (any confidence, any `editableFields`)
 - **THEN** `draft.estado SHALL be 'completada'` (DiDi pastes are post-ride notifications)
 - **AND** `draft.fuente SHALL be 'manual'`
-- **AND** the SQLite CHECK constraint `carreras_estado_check` SHALL accept the value (`openspec/specs/data-model/spec.md` §carreras-estado-check)
+- **AND** the SQLite CHECK constraint `carreras_estado_check` SHALL accept the value (`openspec/specs/data-model/spec.md §carreras-estado-check`)
 
 #### Source
 
@@ -445,7 +445,7 @@ The system SHALL encode the per-platform `estado` choice from locked decision Q4
 
 - **WHEN** any of the three strategies returns a `StrategySuggestion` in Phase 4
 - **THEN** `draft.fuente SHALL be 'manual'` for all three (Uber stub, DiDi parser, InDrive parser)
-- **AND** the value SHALL satisfy the SQLite CHECK constraint `carreras_fuente_check` per `openspec/specs/data-model/spec.md` §carreras-fuente-check (`fuente IN ('manual', 'api', 'background')`)
+- **AND** the value SHALL satisfy the SQLite CHECK constraint `carreras_fuente_check` per `openspec/specs/data-model/spec.md §carreras-fuente-check` (`fuente IN ('manual', 'api', 'background')`)
 - **AND** Phase 6 may flip Uber's `fuente` to `'api'` without changing the strategy interface or `CarreraService`
 
 #### Scenario: carrera-fuente-check rejects out-of-vocabulary fuente
@@ -471,7 +471,7 @@ The system SHALL ship a static registry plus an extension guide so that adding a
 - **WHEN** a future change adds a 4th platform by (a) `INSERT INTO plataformas (id, nombre, comision, tipo_estrategia, metadata) VALUES ('rappi-uuid', 'Rappi', 22, 'rappi_paste', '{}')`, (b) creating `services/strategies/rappi.strategy.ts` implementing `PlatformStrategy`, AND (c) adding `rappi_paste: new RappiStrategy()` to `STRATEGY_REGISTRY`
 - **THEN** the system SHALL resolve `rappi_paste` from the registry via `getStrategyByTipo('rappi_paste')`
 - **AND** no existing file under `services/strategies/**`, `services/carrera.service.ts`, OR `data/sqlite/**` SHALL need modification
-- **AND** the change SHALL be its own OpenSpec change (per `docs/gitflow.md` §3 single-change / single-branch)
+- **AND** the change SHALL be its own OpenSpec change (per `docs/gitflow.md §3` single-change / single-branch)
 
 #### Scenario: extension guide lives in services/strategies/README.md
 
@@ -547,7 +547,7 @@ private async writeAuditRow(
 - **WHEN** a `log_eventos` row is inserted by `CarreraService`
 - **THEN** its `tipo` SHALL equal the literal string `'carrera.registered'` (dot-namespaced, matching the Phase 2 `sync.conflict` precedent at `services/sync-queue.service.ts:481-489`)
 - **AND** the `metadata` column SHALL be valid JSON (the `json1` extension's `json_extract` returns the parsed object)
-- **AND** the `driver_id` column SHALL equal the `driverId` argument (the audit row is per-driver; cross-driver isolation is enforced by RLS at the remote layer per `openspec/specs/data-model/spec.md` §rls-by-driver-id)
+- **AND** the `driver_id` column SHALL equal the `driverId` argument (the audit row is per-driver; cross-driver isolation is enforced by RLS at the remote layer per `openspec/specs/data-model/spec.md §rls-by-driver-id`)
 
 #### Source
 

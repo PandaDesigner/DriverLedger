@@ -387,8 +387,8 @@ services/
         ├── didi.strategy.test.ts      (NEW)
         ├── indrive.strategy.test.ts   (NEW)
         ├── fees.test.ts               (NEW)
-        ├── confidence.test.ts         (NEW)
-        └── parse.test.ts              (NEW)
+        ├── confidence.test.ts            (NEW)
+        └── parse.test.ts            (NEW)
 
 openspec/changes/add-platform-strategies/
 ├── proposal.md                        (sdd-propose, already shipped)

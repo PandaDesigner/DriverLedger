@@ -74,7 +74,7 @@ Apply the 5 user-locked defaults from `sdd/driverledger/add-platform-strategies/
 |---|----------------|-----------|
 | **Q1** Auto-fill input source | **Paste from notification/screenshot** → strategy parses → if `confidence < 0.3` falls back to manual form. Notification listener deferred. PDF regex deferred to Phase 6. | AD-3 |
 | **Q2** `UberStrategy` body in Phase 4 | **Stub** returning `confidence: 0`, `oneTapCapable: false`, `fuente = 'manual'` so Phase 6 can replace body without interface change. Open-closed preserved via `tipo: 'uber_api'` registry key. | AD-4 |
-| **Q3** `calcularComision` + `calcularGasolina` location | **Shared helpers in `services/strategies/fees.ts`**. Formula identical for all 3 today (`comision = tarifa_bruta * plataformas.comision / 100`); strategy methods are thin pass-throughs if Phase 6 needs platform-specific overrides. | AD-5 |
+| **Q3** `calcularComision` + `calcularGasolina` location | **Shared helpers in `services/strategies/fees.ts`**. Formula identical for all three seeded (`comision = tarifa_bruta * plataformas.comision / 100`); strategy methods are thin pass-throughs if Phase 6 needs platform-specific overrides. | AD-5 |
 | **Q4** `estado` lifecycle per platform | Uber = `activa → completada` (driver tap), DiDi/InDrive = `completada` on confirm. Encoded in each strategy's `suggest()` default and asserted in the spec scenario. | AD-6 |
 | **Q5** Open-closed guarantee | **Static map registry** at boot (`STRATEGY_REGISTRY`). Adding a 4th platform = INSERT into `plataformas` + new OpenSpec change to add a strategy class + registry entry. "User adds platform" UI explicitly OUT OF SCOPE. | AD-7 |
 
